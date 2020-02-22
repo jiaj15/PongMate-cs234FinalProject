@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
+import numpy as np
 
 from utils.general import get_logger
 from utils.test_env import EnvTest
@@ -177,8 +178,14 @@ class Linear(DQN):
         ##############################################################
         ##################### YOUR CODE HERE - 4-5 lines #############
         
+        #donemask = tf.cast(self.done_mask, tf.float32)
+        #Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_max(target_q, axis=1) #need to be change,
+
         donemask = tf.cast(self.done_mask, tf.float32)
-        Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_max(target_q, axis=1)
+
+        action = np.argmax(self.next_q)
+        actions = tf.one_hot(indices=action, depth=num_actions, on_value=1.0, off_value=0.0)
+        Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_sum(tf.multiply(actions, target_q), axis=1)
         Q_trans_mask = tf.one_hot(indices=self.a, depth=num_actions, on_value=1.0, off_value=0.0)
         Q_s = tf.reduce_sum(tf.multiply(Q_trans_mask, q), axis=1)
         self.loss = tf.reduce_mean(tf.square(Q_samp_s - Q_s))

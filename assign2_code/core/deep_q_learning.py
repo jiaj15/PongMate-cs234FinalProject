@@ -81,6 +81,8 @@ class DQN(QN):
         sp = self.process_state(self.sp)
         self.target_q = self.get_q_values_op(sp, scope="target_q", reuse=False)
 
+        self.next_q = self.get_q_values_op(sp, scope="q", reuse=True)
+
         # add update operator for target network
         self.add_update_target_op("q", "target_q")
 
