@@ -14,6 +14,7 @@ class Linear(DQN):
     """
     Implement Fully Connected with Tensorflow
     """
+
     def add_placeholders_op(self):
         """
         Adds placeholders to the graph
@@ -51,16 +52,17 @@ class Linear(DQN):
         ##############################################################
         ################YOUR CODE HERE (6-15 lines) ##################
         batch_size = self.config.batch_size
-        self.s = tf.placeholder(tf.uint8, shape=[None, state_shape[0], state_shape[1], state_shape[2] * self.config.state_history], name="state")
+        self.s = tf.placeholder(tf.uint8, shape=[None, state_shape[0], state_shape[1],
+                                                 state_shape[2] * self.config.state_history], name="state")
         self.a = tf.placeholder(tf.int32, shape=[None], name="action")
         self.r = tf.placeholder(tf.float32, shape=[None], name="rewards")
-        self.sp = tf.placeholder(tf.uint8, shape=[None, state_shape[0], state_shape[1], state_shape[2] * self.config.state_history], name="next_state")
+        self.sp = tf.placeholder(tf.uint8, shape=[None, state_shape[0], state_shape[1],
+                                                  state_shape[2] * self.config.state_history], name="next_state")
         self.done_mask = tf.placeholder(tf.bool, shape=[None], name="done_mask")
         self.lr = tf.placeholder(tf.float32, name="learning_rate")
 
         ##############################################################
         ######################## END YOUR CODE #######################
-
 
     def get_q_values_op(self, state, scope, reuse=False):
         """
@@ -94,13 +96,12 @@ class Linear(DQN):
         ##############################################################
         ################ YOUR CODE HERE - 2-3 lines ##################
         with tf.variable_scope(scope, reuse=reuse):
-            input_linear = tf.layers.flatten(state)
-            out = tf.layers.dense(input_linear, num_actions)
+            input_linear = tf.layers.flatten(state, name="input_linear")
+            out = tf.layers.dense(input_linear, num_actions, name="dense")
         ##############################################################
         ######################## END YOUR CODE #######################
 
         return out
-
 
     def add_update_target_op(self, q_scope, target_q_scope):
         """
@@ -138,14 +139,13 @@ class Linear(DQN):
         ##############################################################
         ################### YOUR CODE HERE - 5-10 lines #############
         q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=q_scope)
-        t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=target_q_scope)  
+        t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=target_q_scope)
         op = [tf.assign(t_param[i], q_param[i]) for i in range(len(q_param))]
-        self.update_target_op = tf.group(*op)           
+        self.update_target_op = tf.group(*op)
         ##############################################################
         ######################## END YOUR CODE #######################
 
-
-    def add_loss_op(self, q, target_q):
+    def add_loss_op(self, q, target_q, next_q):
         """
         Sets the loss of a batch, self.loss is a scalar
 
@@ -177,13 +177,18 @@ class Linear(DQN):
         """
         ##############################################################
         ##################### YOUR CODE HERE - 4-5 lines #############
-        
-        #donemask = tf.cast(self.done_mask, tf.float32)
-        #Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_max(target_q, axis=1) #need to be change,
+
+        # donemask = tf.cast(self.done_mask, tf.float32)
+        # Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_max(target_q, axis=1) #need to be change,
 
         donemask = tf.cast(self.done_mask, tf.float32)
+        print("@@@",q)
+        print("###",next_q)
 
-        action = np.argmax(self.next_q)
+        action = np.argmax(next_q)
+        action_compar = np.argmax(q)
+        if action != action_compar:
+            print("!!!")
         actions = tf.one_hot(indices=action, depth=num_actions, on_value=1.0, off_value=0.0)
         Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_sum(tf.multiply(actions, target_q), axis=1)
         Q_trans_mask = tf.one_hot(indices=self.a, depth=num_actions, on_value=1.0, off_value=0.0)
@@ -192,6 +197,12 @@ class Linear(DQN):
         ##############################################################
         ######################## END YOUR CODE #######################
 
+    def add_copy_model_op(self, q_scope, target_q_scope):
+
+        q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=q_scope)
+        t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=target_q_scope)
+        op = [tf.assign(t_param[i], q_param[i]) for i in range(len(q_param))]
+        self.copy_model_op = tf.group(*op)
 
     def add_optimizer_op(self, scope):
         """
@@ -225,7 +236,7 @@ class Linear(DQN):
         """
         ##############################################################
         #################### YOUR CODE HERE - 8-12 lines #############
-        
+
         adamOptimizer = tf.train.AdamOptimizer(self.lr)
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
         grads_and_vars = adamOptimizer.compute_gradients(self.loss, variables)
@@ -235,19 +246,18 @@ class Linear(DQN):
         self.grad_norm = tf.global_norm([gv[0] for gv in grads_and_vars])
         ##############################################################
         ######################## END YOUR CODE #######################
-    
 
 
 if __name__ == '__main__':
     env = EnvTest((5, 5, 1))
 
     # exploration strategy
-    exp_schedule = LinearExploration(env, config.eps_begin, 
-            config.eps_end, config.eps_nsteps)
+    exp_schedule = LinearExploration(env, config.eps_begin,
+                                     config.eps_end, config.eps_nsteps)
 
     # learning rate schedule
-    lr_schedule  = LinearSchedule(config.lr_begin, config.lr_end,
-            config.lr_nsteps)
+    lr_schedule = LinearSchedule(config.lr_begin, config.lr_end,
+                                 config.lr_nsteps)
 
     # train model
     model = Linear(env, config)

@@ -55,7 +55,7 @@ class NatureQN(Linear):
         ##############################################################
         ################ YOUR CODE HERE - 10-15 lines ################ 
 
-        with tf.variable_scope(scope,reuse=reuse):
+        with tf.variable_scope(scope,reuse=reuse) as _:
             #The first hidden layer convolves 32 filters of 8 * 8 with stride 4 with the
             # input image and applies a rectifier nonlinearity
             # The second hidden layer convolves 64 filters of 4 * 4 with stride 2, again followed by a rectifier nonlinearity.
