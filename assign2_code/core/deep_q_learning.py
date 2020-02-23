@@ -40,6 +40,12 @@ class DQN(QN):
         """
         raise NotImplementedError
 
+    def add_copy_model_op(self, q_scope, target_q_scope):
+        q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=q_scope)
+        t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=target_q_scope)
+        op = [tf.assign(t_param[i], q_param[i]) for i in range(len(q_param))]
+        self.copy_model_op = tf.group(*op)
+
     def add_loss_op(self, q, target_q, next_q):
         """
         Set (Q_target - Q)^2
@@ -84,13 +90,14 @@ class DQN(QN):
         sp = self.process_state(self.sp)
         self.target_q = self.get_q_values_op(sp, scope="target_q", reuse=False)
 
+
         self.next_q = self.get_q_values_op(sp, scope="next_q", reuse=False)
+
+        # share the parameters between q and next_q
+        self.add_copy_model_op("q", "next_q")
 
         # add update operator for target network
         self.add_update_target_op("q", "target_q")
-
-        # share the parameters between q and next_q
-        self.add_copy_model_op("q","next_q")
 
         # add square loss
         self.add_loss_op(self.q, self.target_q, self.next_q)
@@ -115,6 +122,8 @@ class DQN(QN):
 
         # synchronise q and target_q networks
         self.sess.run(self.update_target_op)
+
+        self.sess.run(self.copy_model_op)
 
         # for saving networks weights
         self.saver = tf.train.Saver()
@@ -188,7 +197,7 @@ class DQN(QN):
             loss: (Q - Q_target)^2
         """
         # share the parameters between q and next_q
-        self.sess.run(self.copy_model_op)
+        # self.sess.run(self.copy_model_op)
 
         s_batch, a_batch, r_batch, sp_batch, done_mask_batch = replay_buffer.sample(
             self.config.batch_size)
@@ -211,8 +220,10 @@ class DQN(QN):
             self.eval_reward_placeholder: self.eval_reward,
         }
 
-        loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, self.grad_norm,
-                                                               self.merged, self.train_op], feed_dict=fd)
+        loss_eval, grad_norm_eval, summary, _, _= self.sess.run([self.loss, self.grad_norm,
+                                                                          self.merged, self.train_op,
+                                                                          self.copy_model_op],
+                                                                         feed_dict=fd)
 
 
         # tensorboard stuff
@@ -225,3 +236,6 @@ class DQN(QN):
         Update parametes of Q' with parameters of Q
         """
         self.sess.run(self.update_target_op)
+
+    def copy_model(self):
+        self.sess.run(self.copy_model_op)

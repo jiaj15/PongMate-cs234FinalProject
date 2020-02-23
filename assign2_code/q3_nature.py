@@ -71,9 +71,16 @@ class NatureQN(Linear):
             out = tf.layers.dense(out, 512, activation=tf.nn.relu, name="dense1")
             out = tf.layers.dense(out, num_actions, name="dense_output")
 
+            print(out)
+
         ##############################################################
         ######################## END YOUR CODE #######################
         return out
+
+    def get_next_q(self, state, scope, reuse=False):
+        with tf.variable_scope(scope=scope,reuse=reuse):
+            conv1 = tf.get_variable("conv1")
+
 
 
 """

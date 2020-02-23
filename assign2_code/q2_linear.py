@@ -182,13 +182,8 @@ class Linear(DQN):
         # Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_max(target_q, axis=1) #need to be change,
 
         donemask = tf.cast(self.done_mask, tf.float32)
-        print("@@@",q)
-        print("###",next_q)
+        action = tf.convert_to_tensor(tf.argmax(next_q,axis=1))
 
-        action = np.argmax(next_q)
-        action_compar = np.argmax(q)
-        if action != action_compar:
-            print("!!!")
         actions = tf.one_hot(indices=action, depth=num_actions, on_value=1.0, off_value=0.0)
         Q_samp_s = self.r + (1.0 - donemask) * self.config.gamma * tf.reduce_sum(tf.multiply(actions, target_q), axis=1)
         Q_trans_mask = tf.one_hot(indices=self.a, depth=num_actions, on_value=1.0, off_value=0.0)
@@ -240,10 +235,18 @@ class Linear(DQN):
         adamOptimizer = tf.train.AdamOptimizer(self.lr)
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
         grads_and_vars = adamOptimizer.compute_gradients(self.loss, variables)
+        # if self.config.grad_clip:
+        #     grads_and_vars = [(tf.clip_by_norm(gv[0], self.config.clip_val), gv[1]) for gv in grads_and_vars]
+        # self.train_op = adamOptimizer.apply_gradients(grads_and_vars)
+        # self.grad_norm = tf.global_norm([gv[0] for gv in grads_and_vars])
         if self.config.grad_clip:
-            grads_and_vars = [(tf.clip_by_norm(gv[0], self.config.clip_val), gv[1]) for gv in grads_and_vars]
+            for grad, var in grads_and_vars:
+                grad = tf.clip_by_norm(grad, self.config.clip_val)
+        #        print(grads_and_vars)
         self.train_op = adamOptimizer.apply_gradients(grads_and_vars)
-        self.grad_norm = tf.global_norm([gv[0] for gv in grads_and_vars])
+        grads, var = zip(*grads_and_vars)
+        if grads:
+            self.grad_norm = tf.global_norm(grads)
         ##############################################################
         ######################## END YOUR CODE #######################
 

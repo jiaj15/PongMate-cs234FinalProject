@@ -103,6 +103,9 @@ class QN(object):
         """
         pass
 
+    def copy_model(self):
+        pass
+
 
     def init_averages(self):
         """
@@ -253,9 +256,12 @@ class QN(object):
         if (t > self.config.learning_start and t % self.config.learning_freq == 0):
             loss_eval, grad_eval = self.update_step(t, replay_buffer, lr)
 
+
         # occasionaly update target network with q network
         if t % self.config.target_update_freq == 0:
             self.update_target_params()
+
+        #self.copy_model()
             
         # occasionaly save the weights
         if (t % self.config.saving_freq == 0):
