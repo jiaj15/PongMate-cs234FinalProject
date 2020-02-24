@@ -28,7 +28,6 @@ class MaxAndSkipEnv(gym.Wrapper):
                 break
 
         max_frame = np.max(np.stack(self._obs_buffer), axis=0)
-
         return max_frame, total_reward, done, info
 
     def reset(self):
@@ -97,4 +96,66 @@ class PreproWrapper(gym.Wrapper):
                 self.viewer.imshow(img)
 
         else:
-            super(PongWrapper, self)._render(mode, close)
+            super(PreproWrapper, self)._render(mode, close)
+
+
+class TennisPreproWrapper(gym.Wrapper):
+    """
+    Wrapper for Tennis to apply preprocessing
+    Stores the state into variable self.obs
+    """
+    def __init__(self, env, prepro, shape, overwrite_render=True, high=255):
+        """
+        Args:
+            env: (gym env)
+            prepro: (function) to apply to a state for preprocessing
+            shape: (list) shape of obs after prepro
+            overwrite_render: (bool) if True, render is overwriten to vizualise effect of prepro
+            grey_scale: (bool) if True, assume grey scale, else black and white
+            high: (int) max value of state after prepro
+        """
+        super(TennisPreproWrapper, self).__init__(env)
+        self.overwrite_render = overwrite_render
+        self.viewer = None
+        self.prepro = prepro
+        self.observation_space = spaces.Box(low=0, high=high, shape=shape, dtype=np.uint8)
+        self.high = high
+
+
+    def step(self, action):
+        """
+        Overwrites _step function from environment to apply preprocess
+        """
+        obs, reward, done, info = self.env.step(action)
+        self.obs = self.prepro(obs)
+        return self.obs, reward, done, info
+
+
+    def reset(self):
+        self.obs = self.prepro(self.env.reset())
+        return self.obs
+
+
+    def _render(self, mode='human', close=False):
+        """
+        Overwrite _render function to vizualize preprocessing
+        """
+
+        if self.overwrite_render:
+            if close:
+                if self.viewer is not None:
+                    self.viewer.close()
+                    self.viewer = None
+                return
+            img = self.obs
+            if mode == 'rgb_array':
+                return img
+            elif mode == 'human':
+                from gym.envs.classic_control import rendering
+                if self.viewer is None:
+                    self.viewer = SimpleImageViewer()
+                self.viewer.imshow(img)
+                return self.viewer.isopen
+
+        else:
+            super(TennisWrapper, self)._render(mode, close)

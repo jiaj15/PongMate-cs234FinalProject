@@ -9,7 +9,7 @@ from collections import deque
 
 from utils.general import get_logger, Progbar, export_plot
 from utils.replay_buffer import ReplayBuffer
-from utils.preprocess import greyscale
+from utils.preprocess import greyscale_tennis, greyscale
 from utils.wrappers import PreproWrapper, MaxAndSkipEnv
 
 
@@ -333,7 +333,7 @@ class QN(object):
         env = gym.make(self.config.env_name)
         env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
         env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
-        env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1), 
+        env = PreproWrapper(env, prepro=greyscale_tennis, shape=self.config.shape, 
                         overwrite_render=self.config.overwrite_render)
         self.evaluate(env, 1)
 

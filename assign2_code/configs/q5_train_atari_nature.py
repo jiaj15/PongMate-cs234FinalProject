@@ -6,6 +6,7 @@ class config():
     overwrite_render = True
     record           = True
     high             = 255.
+    shape            = (80, 80, 1)
 
     # output config
     output_path  = "results/q5_train_atari_nature/"
