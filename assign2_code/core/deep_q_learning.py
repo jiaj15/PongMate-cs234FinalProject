@@ -127,7 +127,11 @@ class DQN(QN):
 
         # for saving networks weights
         self.saver = tf.train.Saver()
+        # print(self.config.model_output)
+        # print(tf.train.latest_checkpoint(self.config.model_output))
         self.saver.restore(self.sess, self.config.model_output)
+        
+        print("------------restore weights--------")
 
     def add_summary(self):
         """

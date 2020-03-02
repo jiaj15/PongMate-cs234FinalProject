@@ -1,6 +1,13 @@
+#!usr/bin/python3
+
 import numpy as np
-import cv2
 import tensorflow as tf
+import sys
+if '/opt/ros/kinetic/lib/python2.7/dist-packages' in sys.path:
+    sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+
+import cv2
+
 def greyscale_tennis(state):
     state = np.reshape(state, [250, 160, 3]).astype(np.float32)
     # state = state[:, :, 0] * 0.299 + state[:, :, 1] * 0.587 + state[:, :, 2] * 0.114

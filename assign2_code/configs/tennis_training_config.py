@@ -1,3 +1,4 @@
+from utils.preprocess import greyscale_tennis
 class config():
     # env config
     render_train     = False
@@ -10,10 +11,11 @@ class config():
 
     # output config
     output_path  = "results/tennis_train_atari_nature/"
-    model_output = output_path + "model.weights/"
+    model_output = output_path + "model.weights/model/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
     record_path  = output_path + "monitor/"
+    preprocess_method = greyscale_tennis
 
     # model and training config
     num_episodes_test = 50
