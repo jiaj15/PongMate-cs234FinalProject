@@ -130,7 +130,7 @@ class DQN(QN):
         # print(self.config.model_output)
         # print(tf.train.latest_checkpoint(self.config.model_output))
         self.saver.restore(self.sess, self.config.model_output)
-        
+
         print("------------restore weights--------")
 
     def add_summary(self):
@@ -141,6 +141,8 @@ class DQN(QN):
         self.avg_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="avg_reward")
         self.max_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="max_reward")
         self.std_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="std_reward")
+        
+        self.succ_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="succ_rates")
 
         self.avg_q_placeholder = tf.placeholder(tf.float32, shape=(), name="avg_q")
         self.max_q_placeholder = tf.placeholder(tf.float32, shape=(), name="max_q")
@@ -160,6 +162,8 @@ class DQN(QN):
         tf.summary.scalar("Avg_Q", self.avg_q_placeholder)
         tf.summary.scalar("Max_Q", self.max_q_placeholder)
         tf.summary.scalar("Std_Q", self.std_q_placeholder)
+
+        tf.summary.scalar("succ_rates", self.succ_reward_placeholder)
 
         tf.summary.scalar("Eval_Reward", self.eval_reward_placeholder)
 
@@ -223,6 +227,7 @@ class DQN(QN):
             self.max_q_placeholder: self.max_q,
             self.std_q_placeholder: self.std_q,
             self.eval_reward_placeholder: self.eval_reward,
+            self.succ_reward_placeholder: self.succ_rates,
         }
 
         loss_eval, grad_norm_eval, summary, _, _= self.sess.run([self.loss, self.grad_norm,

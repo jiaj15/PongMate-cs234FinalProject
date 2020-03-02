@@ -120,9 +120,10 @@ class QN(object):
         self.std_q = 0
         
         self.eval_reward = -21.
+        self.succ_rates = .0
 
 
-    def update_averages(self, rewards, max_q_values, q_values, scores_eval):
+    def update_averages(self, rewards, max_q_values, q_values, scores_eval, info_list):
         """
         Update the averages
 
@@ -139,6 +140,7 @@ class QN(object):
         self.max_q      = np.mean(max_q_values)
         self.avg_q      = np.mean(q_values)
         self.std_q      = np.sqrt(np.var(q_values) / len(q_values))
+        self.succ_rates = np.mean(info_list)
 
         if len(scores_eval) > 0:
             self.eval_reward = scores_eval[-1]
@@ -159,6 +161,7 @@ class QN(object):
         rewards = deque(maxlen=self.config.num_episodes_test)
         max_q_values = deque(maxlen=1000)
         q_values = deque(maxlen=1000)
+        info_values = deque(maxlen=self.config.num_episodes_test)
         self.init_averages()
 
         t = last_eval = last_record = 0 # time control of nb of steps
@@ -170,6 +173,7 @@ class QN(object):
         # interact with environment
         while t < self.config.nsteps_train:
             total_reward = 0
+            total_info = 0
             state = self.env.reset()
             while True:
                 t += 1
@@ -190,6 +194,7 @@ class QN(object):
 
                 # perform action in env
                 new_state, reward, done, info = self.env.step(action)
+                
 
                 # store the transition
                 replay_buffer.store_effect(idx, action, reward, done)
@@ -201,7 +206,7 @@ class QN(object):
                 # logging stuff
                 if ((t > self.config.learning_start) and (t % self.config.log_freq == 0) and
                    (t % self.config.learning_freq == 0)):
-                    self.update_averages(rewards, max_q_values, q_values, scores_eval)
+                    self.update_averages(rewards, max_q_values, q_values, scores_eval, info_values)
                     exp_schedule.update(t)
                     lr_schedule.update(t)
                     if len(rewards) > 0:
@@ -217,11 +222,13 @@ class QN(object):
 
                 # count reward
                 total_reward += reward
+                total_info +=info["delta_score"]
                 if done or t >= self.config.nsteps_train:
                     break
 
             # updates to perform at the end of an episode
-            rewards.append(total_reward)          
+            rewards.append(total_reward)     
+            info_values.append(total_info)     
 
             if (t > self.config.learning_start) and (last_eval > self.config.eval_freq):
                 # evaluate our policy

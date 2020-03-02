@@ -18,21 +18,27 @@ class MaxAndSkipEnv(gym.Wrapper):
         self._skip       = skip
 
     def step(self, action):
+        total_info = {"delta_score": 0.0}
         total_reward = 0.0
         done = None
         for _ in range(self._skip):
             obs, reward, done, info = self.env.step(action)
             self._obs_buffer.append(obs)
             total_reward += reward
+            
+        
             if done:
                 break
+        # print(total_reward)
+        total_info["delta_score"] = total_reward
         if abs(total_reward) < 0.1:
-            total_reward = 1.0
+            total_reward = 0.01
         else :
-            total_reward = np.random.choice([-1.0, 1.0], replace=True)
+            total_reward = -1.0
+            # np.random.choice([-1.0, 1.0], replace=True)
 
         max_frame = np.max(np.stack(self._obs_buffer), axis=0)
-        return max_frame, total_reward, done, info
+        return max_frame, total_reward, done, total_info
 
     def reset(self):
         """Clear past frame buffer and init. to first obs. from inner env."""
