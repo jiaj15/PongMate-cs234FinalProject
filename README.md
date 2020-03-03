@@ -2,6 +2,22 @@
 
 ddl: 03/11(poster session)
 
+Find action
+```python
+def isFire(action):
+    """
+    action: int
+    env: Pong-v0
+    return true if it is a FIRE action
+    """
+    ACTION_MEANINGS = ['NOOP', 'FIRE', 'RIGHT', 'LEFT', 'RIGHTFIRE', 'LEFTFIRE']
+    action_mean = ACTION_MEANINGS[action]
+    if action_mean.find('FIRE') == -1:
+        return False
+    else:
+        return True
+```
+
 TODO
 
 1. Try Pong-v0 env
