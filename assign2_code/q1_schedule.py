@@ -118,7 +118,7 @@ class LinearExploration(LinearSchedule):
             if np.random.random() < self.epsilon:
                 return np.random.choice(fire_actions, 1)
             else:
-                return best_action
+                return fire_actions[0]
 
         else:
             return best_action
