@@ -40,11 +40,19 @@ class DQN(QN):
         """
         raise NotImplementedError
 
-    def add_copy_model_op(self, q_scope, target_q_scope):
-        q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=q_scope)
-        t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=target_q_scope)
+    def init_well_trained_model(self):
+
+        q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="q")
+        t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="well_trained_q")
         op = [tf.assign(t_param[i], q_param[i]) for i in range(len(q_param))]
-        self.copy_model_op = tf.group(*op)
+        self.init_well_trained_model_op = tf.group(*op)
+
+
+    # def add_copy_model_op(self, q_scope, target_q_scope):
+    #     q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=q_scope)
+    #     t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=target_q_scope)
+    #     op = [tf.assign(t_param[i], q_param[i]) for i in range(len(q_param))]
+    #     self.copy_model_op = tf.group(*op)
 
     def add_loss_op(self, q, target_q, next_q):
         """
@@ -90,8 +98,11 @@ class DQN(QN):
         sp = self.process_state(self.sp)
         self.target_q = self.get_q_values_op(sp, scope="target_q", reuse=False)
 
-
         self.next_q = self.get_q_values_op(sp, scope="next_q", reuse=False)
+
+        # add a well_trained model here, to help find the best action
+        # self.well_trained_q = self.get_q_values_op(s, scope="well_trained_q", reuse=False)
+        # self.init_well_trained_model()
 
         # share the parameters between q and next_q
         self.add_copy_model_op("q", "next_q")
@@ -125,11 +136,18 @@ class DQN(QN):
 
         self.sess.run(self.copy_model_op)
 
+        #self.sess.run(self.init_well_trained_model_op)
+
         # for saving networks weights
         self.saver = tf.train.Saver()
         # print(self.config.model_output)
         # print(tf.train.latest_checkpoint(self.config.model_output))
         self.saver.restore(self.sess, self.config.model_output)
+
+        s = self.process_state(self.s)
+        self.well_trained_q = self.get_q_values_op(s, scope="well_trained_q", reuse=False)
+        self.init_well_trained_model()
+        self.sess.run(self.init_well_trained_model_op)
 
         print("------------restore weights--------")
 
@@ -191,8 +209,13 @@ class DQN(QN):
             action: (int)
             action_values: (np array) q values for all actions
         """
+        # action_values = self.sess.run(self.q, feed_dict={self.s: [state]})[0]
+        # return np.argmax(action_values), action_values
+
+        well_trained_values = self.sess.run(self.well_trained_q, feed_dict={self.s: [state]})[0]
+
         action_values = self.sess.run(self.q, feed_dict={self.s: [state]})[0]
-        return np.argmax(action_values), action_values
+        return np.argmax(well_trained_values), action_values
 
     def update_step(self, t, replay_buffer, lr):
         """
@@ -230,10 +253,13 @@ class DQN(QN):
             self.succ_reward_placeholder: self.succ_rates,
         }
 
-        loss_eval, grad_norm_eval, summary, _, _= self.sess.run([self.loss, self.grad_norm,
+        loss_eval, grad_norm_eval, summary, _, _, action, well_trained_q, q = self.sess.run([self.loss, self.grad_norm,
                                                                           self.merged, self.train_op,
-                                                                          self.copy_model_op],
+                                                                          self.copy_model_op,self.a,self.well_trained_q,self.q],
                                                                          feed_dict=fd)
+        print("action",a)
+        print("well_trained_q",well_trained_q)
+        print("training q",q)
 
 
         # tensorboard stuff

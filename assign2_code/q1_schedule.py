@@ -81,14 +81,51 @@ class LinearExploration(LinearSchedule):
         ##############################################################
         ################ YOUR CODE HERE - 4-5 lines ##################
 
+        ##############################################################
+        ##################### SORT VERSION ###########################
+        ##############################################################
+
         # add q_value sorting
-        candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
-        if np.random.random() < self.epsilon:
-            return np.random.choice(candidate_actions, 1)
+        # candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
+        # if np.random.random() < self.epsilon:
+        #     return np.random.choice(candidate_actions, 1)
+        # else:
+        #     return best_action
+
+        ##############################################################
+        ############# CLASSIFY FIRE AND UNFIRE VERSION ###############
+
+        def isFire(action):
+            """
+            action: int
+            env: Pong-v0
+            return true if it is a FIRE action
+            """
+            ACTION_MEANINGS = ['NOOP', 'FIRE', 'RIGHT', 'LEFT', 'RIGHTFIRE', 'LEFTFIRE']
+            action_mean = ACTION_MEANINGS[action]
+            if action_mean.find('FIRE') == -1:
+                return False
+            else:
+                return True
+
+        if isFire(best_action):
+            candidate_actions = np.argsort(q_values)[::-1][:]
+            fire_actions = []
+            for a in candidate_actions:
+                if isFire(a):
+                    fire_actions.append(a)
+            fire_actions = np.array(fire_actions)
+            if np.random.random() < self.epsilon:
+                return np.random.choice(fire_actions, 1)
+            else:
+                return best_action
+
         else:
             return best_action
 
-        # original version
+
+        ##############################################################
+        ##################### ORIGINAL VERSION #######################
         # prob=np.random.rand()
         # if prob < self.epsilon:
         #     return self.env.action_space.sample()

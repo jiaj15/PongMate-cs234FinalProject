@@ -242,7 +242,6 @@ class Linear(DQN):
         if self.config.grad_clip:
             for grad, var in grads_and_vars:
                 grad = tf.clip_by_norm(grad, self.config.clip_val)
-        #        print(grads_and_vars)
         self.train_op = adamOptimizer.apply_gradients(grads_and_vars)
         grads, var = zip(*grads_and_vars)
         if grads:
