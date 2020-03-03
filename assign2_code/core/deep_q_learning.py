@@ -257,7 +257,7 @@ class DQN(QN):
                                                                           self.merged, self.train_op,
                                                                           self.copy_model_op,self.a,self.well_trained_q,self.q],
                                                                          feed_dict=fd)
-        print("action",a)
+        print("action",action)
         print("well_trained_q",well_trained_q)
         print("training q",q)
 
