@@ -93,7 +93,7 @@ class QN(object):
         """
         # modifying get action rules
         best_action, q_values = self.get_best_action(state)
-        candidate_actions = np.argsort(q_values)[::-1][:4]  # first 4 actions with highest q values
+        candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
         # print(best_action, candidate_actions, q_values)
         # exit(0)
         if np.random.random() < self.config.soft_epsilon:
