@@ -234,7 +234,7 @@ class QN(object):
 
                 # count reward
                 total_reward += reward
-                #total_info +=info["delta_score"]
+                total_info +=info["delta_score"]
                 if done or t >= self.config.nsteps_train:
                     break
 
