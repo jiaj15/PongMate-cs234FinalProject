@@ -83,7 +83,7 @@ class LinearExploration(LinearSchedule):
 
         # add q_value sorting
         candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
-        if np.random.random() < self.config.soft_epsilon:
+        if np.random.random() < self.epsilon:
             return np.random.choice(candidate_actions, 1)
         else:
             return best_action
