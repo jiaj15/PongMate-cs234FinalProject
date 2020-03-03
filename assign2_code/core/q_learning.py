@@ -91,10 +91,21 @@ class QN(object):
         Args:
             state: observation from gym
         """
+        # modifying get action rules
+        best_action, q_values = self.get_best_action(state)
+        candidate_actions = np.argsort(q_values)[::-1][:4]  # first 4 actions with highest q values
+        # print(best_action, candidate_actions, q_values)
+        # exit(0)
         if np.random.random() < self.config.soft_epsilon:
-            return self.env.action_space.sample()
+            return np.random.choice(candidate_actions, 1)
         else:
-            return self.get_best_action(state)[0]
+            return best_action
+
+        # original version
+        # if np.random.random() < self.config.soft_epsilon:
+        #     return self.env.action_space.sample()
+        # else:
+        #     return self.get_best_action(state)[0]
 
 
     def update_target_params(self):
@@ -186,7 +197,8 @@ class QN(object):
 
                 # chose action according to current Q and exploration
                 best_action, q_values = self.get_best_action(q_input)
-                action                = exp_schedule.get_action(best_action)
+                # action                = exp_schedule.get_action(best_action)
+                action = self.get_action(best_action)
 
                 # store q values
                 max_q_values.append(max(q_values))
