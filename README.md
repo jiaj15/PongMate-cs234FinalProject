@@ -33,6 +33,11 @@ env.ale.setDifficulty(1)
 
 
 SYZ Recording
+
+Make some changes to sort the action(fire and unfire)
+
+- in deep_q_learning.py
+
 ```python
     def get_best_action(self, state):
         """
