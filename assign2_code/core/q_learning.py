@@ -308,8 +308,7 @@ class QN(object):
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)
         rewards = []
 
-        # for i in range(num_episodes):
-        for i in range(10):
+        for i in range(num_episodes):
             total_reward = 0
             state = env.reset()
             while True:
