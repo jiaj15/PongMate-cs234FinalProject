@@ -34,7 +34,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         if abs(total_reward) < 0.1:
             total_reward = 0.01
         else :
-            total_reward = 0.0
+            total_reward = -0.1
             # np.random.choice([-1.0, 1.0], replace=True)
 
         max_frame = np.max(np.stack(self._obs_buffer), axis=0)
