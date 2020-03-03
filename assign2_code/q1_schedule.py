@@ -58,7 +58,7 @@ class LinearExploration(LinearSchedule):
         super(LinearExploration, self).__init__(eps_begin, eps_end, nsteps)
 
 
-    def get_action(self, best_action):
+    def get_action(self, best_action, q_values):
         """
         Returns a random action with prob epsilon, otherwise returns the best_action
 
@@ -80,11 +80,20 @@ class LinearExploration(LinearSchedule):
         """
         ##############################################################
         ################ YOUR CODE HERE - 4-5 lines ##################
-        prob=np.random.rand()
-        if prob < self.epsilon:
-            return self.env.action_space.sample()
-        else :
+
+        # add q_value sorting
+        candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
+        if np.random.random() < self.config.soft_epsilon:
+            return np.random.choice(candidate_actions, 1)
+        else:
             return best_action
+
+        # original version
+        # prob=np.random.rand()
+        # if prob < self.epsilon:
+        #     return self.env.action_space.sample()
+        # else :
+        #     return best_action
 
         ##############################################################
         ######################## END YOUR CODE #######################
