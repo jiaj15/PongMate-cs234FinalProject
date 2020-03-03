@@ -30,3 +30,23 @@ env.ale.setDifficulty(1)
 * retrain
 
 2. Test Tennis-v0 with stable-baselines
+
+
+SYZ Recording
+```python
+    def get_best_action(self, state):
+        """
+        Return best action
+
+        Args:
+            state: 4 consecutive observations from gym
+        Returns:
+            action: (int)
+            action_values: (np array) q values for all actions
+        """
+
+        well_trained_values = self.sess.run(self.well_trained_q, feed_dict={self.s: [state]})[0]
+
+        action_values = self.sess.run(self.q, feed_dict={self.s: [state]})[0]
+        return np.argmax(well_trained_values), action_values
+```
