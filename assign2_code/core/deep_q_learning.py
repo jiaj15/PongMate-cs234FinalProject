@@ -211,9 +211,32 @@ class DQN(QN):
         # return np.argmax(action_values), action_values
 
         well_trained_values = self.sess.run(self.well_trained_q, feed_dict={self.s: [state]})[0]
-
         action_values = self.sess.run(self.q, feed_dict={self.s: [state]})[0]
-        return np.argmax(well_trained_values), action_values
+        best_action = np.argmax(well_trained_values)
+
+        def isFire(action):
+            """
+            action: int
+            env: Pong-v0
+            return true if it is a FIRE action
+            """
+            ACTION_MEANINGS = ['NOOP', 'FIRE', 'RIGHT', 'LEFT', 'RIGHTFIRE', 'LEFTFIRE']
+            action_mean = ACTION_MEANINGS[action]
+            if action_mean.find('FIRE') == -1:
+                return False
+            else:
+                return True
+
+        if isFire(best_action):
+            candidate_actions = np.argsort(action_values)[::-1][:]
+            fire_actions = []
+            for a in candidate_actions:
+                if isFire(a):
+                    fire_actions.append(a)
+            fire_actions = np.array(fire_actions)
+            best_action = np.argmax(fire_actions)
+
+        return best_action, action_values
 
     def update_step(self, t, replay_buffer, lr):
         """
@@ -267,7 +290,7 @@ class DQN(QN):
 
         print("action", action)
         print("well_trained_q", well_trained_q)
-        print("next_q",next_q)
+        print("next_q", next_q)
         print("training q", q)
 
         # tensorboard stuff

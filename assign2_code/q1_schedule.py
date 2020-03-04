@@ -95,31 +95,8 @@ class LinearExploration(LinearSchedule):
         ##############################################################
         ############# CLASSIFY FIRE AND UNFIRE VERSION ###############
 
-        def isFire(action):
-            """
-            action: int
-            env: Pong-v0
-            return true if it is a FIRE action
-            """
-            ACTION_MEANINGS = ['NOOP', 'FIRE', 'RIGHT', 'LEFT', 'RIGHTFIRE', 'LEFTFIRE']
-            action_mean = ACTION_MEANINGS[action]
-            if action_mean.find('FIRE') == -1:
-                return False
-            else:
-                return True
-
-        if isFire(best_action):
-            candidate_actions = np.argsort(q_values)[::-1][:]
-            fire_actions = []
-            for a in candidate_actions:
-                if isFire(a):
-                    fire_actions.append(a)
-            fire_actions = np.array(fire_actions)
-            if np.random.random() < self.epsilon:
-                return np.random.choice(fire_actions, 1)
-            else:
-                return fire_actions[0]
-
+        if np.random.random() < self.epsilon:
+            return self.env.action_space.sample()
         else:
             return best_action
 
