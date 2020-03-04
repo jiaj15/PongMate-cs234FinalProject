@@ -41,12 +41,10 @@ class DQN(QN):
         raise NotImplementedError
 
     def init_well_trained_model(self):
-
         q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="q")
         t_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="well_trained_q")
         op = [tf.assign(t_param[i], q_param[i]) for i in range(len(q_param))]
         self.init_well_trained_model_op = tf.group(*op)
-
 
     # def add_copy_model_op(self, q_scope, target_q_scope):
     #     q_param = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=q_scope)
@@ -136,7 +134,7 @@ class DQN(QN):
 
         self.sess.run(self.copy_model_op)
 
-        #self.sess.run(self.init_well_trained_model_op)
+        # self.sess.run(self.init_well_trained_model_op)
 
         # for saving networks weights
         self.saver = tf.train.Saver()
@@ -159,7 +157,7 @@ class DQN(QN):
         self.avg_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="avg_reward")
         self.max_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="max_reward")
         self.std_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="std_reward")
-        
+
         self.succ_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="succ_rates")
 
         self.avg_q_placeholder = tf.placeholder(tf.float32, shape=(), name="avg_q")
@@ -253,14 +251,20 @@ class DQN(QN):
             self.succ_reward_placeholder: self.succ_rates,
         }
 
-        loss_eval, grad_norm_eval, summary, _, _, action, well_trained_q, q = self.sess.run([self.loss, self.grad_norm,
-                                                                          self.merged, self.train_op,
-                                                                          self.copy_model_op,self.a,self.well_trained_q,self.q],
-                                                                         feed_dict=fd)
-        print("action",action)
-        print("well_trained_q",well_trained_q)
-        print("training q",q)
+        # loss_eval, grad_norm_eval, summary, _, _, action, well_trained_q, q = self.sess.run([self.loss, self.grad_norm,
+        #                                                                   self.merged, self.train_op,
+        #                                                                   self.copy_model_op,self.a,self.well_trained_q,self.q],
+        #                                                                  feed_dict=fd)
 
+        loss_eval, grad_norm_eval, summary, _, action, well_trained_q, q = self.sess.run([self.loss, self.grad_norm,
+                                                                                          self.merged, self.train_op,
+                                                                                          self.a,
+                                                                                          self.well_trained_q,
+                                                                                          self.q],
+                                                                                         feed_dict=fd)
+        print("action", action)
+        print("well_trained_q", well_trained_q)
+        print("training q", q)
 
         # tensorboard stuff
         self.file_writer.add_summary(summary, t)
