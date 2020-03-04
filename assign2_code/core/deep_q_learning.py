@@ -227,13 +227,14 @@ class DQN(QN):
             else:
                 return True
 
+        candidate_actions = np.argsort(action_values)[::-1][:]
+        fire_actions = []
+        for a in candidate_actions:
+            if isFire(a):
+                fire_actions.append(a)
+        fire_actions = np.array(fire_actions)
+
         if isFire(best_action):
-            candidate_actions = np.argsort(action_values)[::-1][:]
-            fire_actions = []
-            for a in candidate_actions:
-                if isFire(a):
-                    fire_actions.append(a)
-            fire_actions = np.array(fire_actions)
             best_action = fire_actions[0]
 
         return best_action, fire_actions
