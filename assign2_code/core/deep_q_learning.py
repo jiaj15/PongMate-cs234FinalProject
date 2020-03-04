@@ -288,10 +288,10 @@ class DQN(QN):
              self.next_q],
             feed_dict=fd)
 
-        print("action", action)
-        print("well_trained_q", well_trained_q)
-        print("next_q", next_q)
-        print("training q", q)
+        # print("action", action)
+        # print("well_trained_q", well_trained_q)
+        # print("next_q", next_q)
+        # print("training q", q)
 
         # tensorboard stuff
         self.file_writer.add_summary(summary, t)
