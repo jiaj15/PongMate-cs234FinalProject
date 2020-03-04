@@ -256,14 +256,18 @@ class DQN(QN):
         #                                                                   self.copy_model_op,self.a,self.well_trained_q,self.q],
         #                                                                  feed_dict=fd)
 
-        loss_eval, grad_norm_eval, summary, _, action, well_trained_q, q = self.sess.run([self.loss, self.grad_norm,
-                                                                                          self.merged, self.train_op,
-                                                                                          self.a,
-                                                                                          self.well_trained_q,
-                                                                                          self.q],
-                                                                                         feed_dict=fd)
+        loss_eval, grad_norm_eval, summary, _, action, well_trained_q, q, next_q = self.sess.run(
+            [self.loss, self.grad_norm,
+             self.merged, self.train_op,
+             self.a,
+             self.well_trained_q,
+             self.q,
+             self.next_q],
+            feed_dict=fd)
+
         print("action", action)
         print("well_trained_q", well_trained_q)
+        print("next_q",next_q)
         print("training q", q)
 
         # tensorboard stuff
