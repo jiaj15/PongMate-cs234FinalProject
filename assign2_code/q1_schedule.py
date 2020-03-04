@@ -58,7 +58,7 @@ class LinearExploration(LinearSchedule):
         super(LinearExploration, self).__init__(eps_begin, eps_end, nsteps)
 
 
-    def get_action(self, best_action, q_values):
+    def get_action(self, best_action, fire_actions):
         """
         Returns a random action with prob epsilon, otherwise returns the best_action
 
@@ -96,7 +96,7 @@ class LinearExploration(LinearSchedule):
         ############# CLASSIFY FIRE AND UNFIRE VERSION ###############
 
         if np.random.random() < self.epsilon:
-            return self.env.action_space.sample()
+            return np.random.choice(fire_actions, 1)
         else:
             return best_action
 

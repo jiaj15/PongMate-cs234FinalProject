@@ -236,7 +236,7 @@ class DQN(QN):
             fire_actions = np.array(fire_actions)
             best_action = fire_actions[0]
 
-        return best_action, action_values
+        return best_action, fire_actions
 
     def update_step(self, t, replay_buffer, lr):
         """
