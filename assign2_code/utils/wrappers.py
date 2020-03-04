@@ -24,8 +24,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         for _ in range(self._skip):
             obs, reward, done, info = self.env.step(action)
             self._obs_buffer.append(obs)
-            total_reward += reward
-            
+            total_reward += reward          
         
             if done:
                 break
@@ -34,7 +33,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         if abs(total_reward) < 0.1:
             total_reward = 0.01
         else :
-            total_reward = -0.1
+            total_reward = 0.1*total_reward
             # np.random.choice([-1.0, 1.0], replace=True)
 
         max_frame = np.max(np.stack(self._obs_buffer), axis=0)
