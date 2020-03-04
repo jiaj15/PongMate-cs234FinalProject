@@ -234,7 +234,7 @@ class DQN(QN):
                 if isFire(a):
                     fire_actions.append(a)
             fire_actions = np.array(fire_actions)
-            best_action = np.argmax(fire_actions)
+            best_action = fire_actions[0]
 
         return best_action, action_values
 
