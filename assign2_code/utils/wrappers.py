@@ -4,6 +4,12 @@ from gym import spaces
 from utils.viewer import SimpleImageViewer
 from collections import deque
 
+import os
+try:
+    from stable_baselines.deepq import DQN, wrap_atari_dqn, CnnPolicy                    
+except ImportError:
+    print("IGNORE IF YOU ARE NOT USING FIREOTHERSKIPENV ")
+
 
 class MaxAndSkipEnv(gym.Wrapper):
     """
@@ -45,6 +51,41 @@ class MaxAndSkipEnv(gym.Wrapper):
         obs = self.env.reset()
         self._obs_buffer.append(obs)
         return obs
+
+
+
+def isFire(action):
+    """
+    action: int
+    env: Pong-v0
+    return true if it is a FIRE action
+    """
+    # ACTION_MEANINGS = ['NOOP', 'FIRE', 'RIGHT', 'LEFT', 'RIGHTFIRE', 'LEFTFIRE']
+    # action_mean = ACTION_MEANINGS[action]
+    # if action_mean.find('FIRE') == -1:
+    #     return False
+    # else:
+    #     return True
+    return (action==1) or (action==4) or (action==5)
+ 
+
+class FireOtherSkipEnv(gym.Wrapper):
+    """
+    skip frames not producing FIRE action in DDQN
+    """
+    def __init__(self, env=None):
+        """Return only every `skip`-th frame"""
+        super(FireOtherSkipEnv, self).__init__(env)
+        # most recent raw observations (for max pooling across time steps)
+        self._obs_buffer = deque(maxlen=2)
+        self.env = wrap_atari_dqn(self.env)
+        model_output='/home/jingjia16/stable-baselines/scripts/deepq_pong.zip' 
+        if os.path.exists(model_output):
+            self.model = DQN.load(model_output)
+        else:
+            print("failed to load the model")
+
+
 
 
 
