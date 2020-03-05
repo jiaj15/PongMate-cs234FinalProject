@@ -47,6 +47,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         return obs
 
 
+
 class PreproWrapper(gym.Wrapper):
     """
     Wrapper for Pong to apply preprocessing
