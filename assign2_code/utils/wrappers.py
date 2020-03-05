@@ -84,6 +84,36 @@ class FireOtherSkipEnv(gym.Wrapper):
             self.model = DQN.load(model_output)
         else:
             print("failed to load the model")
+            
+    def step(self, action):
+
+        obs, reward, done, info = self.env.step(action)
+        total_reward = reward
+        interval_length = 0
+
+        # counting for later rewards
+        while True:
+            dqn_action, _states = self.model.predict(obs)
+            # print(dqn_action)
+            if isFire(dqn_action):
+                # print("--------------{}".format(dqn_action))
+                break
+            obs, reward, done, info = self.env.step(dqn_action)
+            self._obs_buffer.append(np.array(obs[:,:,:]))
+            total_reward += reward
+            interval_length += 1
+            if done:
+                break
+        max_frame = np.max(np.stack(self._obs_buffer), axis=0)
+        interval_reward = total_reward*0.5 + interval_length*0.1            
+        return max_frame, interval_reward, done, info
+
+    def reset(self):
+        """Clear past frame buffer and init. to first obs. from inner env."""
+        self._obs_buffer.clear()
+        obs = self.env.reset()
+        self._obs_buffer.append(obs)
+        return obs
 
 
 
