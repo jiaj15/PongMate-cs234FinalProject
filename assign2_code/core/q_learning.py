@@ -175,7 +175,7 @@ class QN(object):
         info_values = deque(maxlen=self.config.num_episodes_test)
         self.init_averages()
 
-        t = last_eval = last_record = 0 # time control of nb of steps
+        t = last_eval = last_record = last_save = 0 # time control of nb of steps
         scores_eval = [] # list of scores computed at iteration time
         scores_eval += [self.evaluate()]
         
@@ -190,6 +190,7 @@ class QN(object):
                 t += 1
                 last_eval += 1
                 last_record += 1
+                last_save += 1
                 if self.config.render_train: self.env.render()
                 # replay memory stuff
                 idx      = replay_buffer.store_frame(state)
@@ -252,6 +253,12 @@ class QN(object):
                 self.logger.info("Recording...")
                 last_record =0
                 self.record()
+
+            if (t > self.config.learning_start) and (last_save > self.config.checkpoint_freq):
+                last_save = 0
+                sys.stdout.write("\rSaving the checkpoint, last eval reward: {}...".format(scores_eval[-1]))
+                sys.stdout.flush()                
+                self.save_checkpoint(self.config.checkpoint_path + str(last_save))
 
         # last words
         self.logger.info("- Training done.")

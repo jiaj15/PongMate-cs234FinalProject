@@ -11,6 +11,14 @@ class DQN(QN):
     Abstract class for Deep Q Learning
     """
 
+    def load(self, path):
+        self.saver.restore(self.sess, path)
+        # raise NotImplementedError
+
+    def predict(self, obs):
+        return self.get_best_action(obs)
+        # raise NotImplementedError
+        
     def add_placeholders_op(self):
         raise NotImplementedError
 
@@ -129,7 +137,7 @@ class DQN(QN):
         self.saver = tf.train.Saver()
         # print(self.config.model_output)
         # print(tf.train.latest_checkpoint(self.config.model_output))
-        self.saver.restore(self.sess, self.config.model_output)
+        # self.saver.restore(self.sess, self.config.model_output)
 
         print("------------restore weights--------")
 
@@ -180,6 +188,11 @@ class DQN(QN):
             os.makedirs(self.config.model_output)
 
         self.saver.save(self.sess, self.config.model_output)
+
+    def save_checkpoint(self, path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        self.saver.save(self.sess, path) 
 
     def get_best_action(self, state):
         """
