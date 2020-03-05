@@ -92,20 +92,20 @@ class QN(object):
             state: observation from gym
         """
         # modifying get action rules
-        best_action, q_values = self.get_best_action(state)
-        candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
-        # print(best_action, candidate_actions, q_values)
-        # exit(0)
-        if np.random.random() < self.config.soft_epsilon:
-            return np.random.choice(candidate_actions, 1)
-        else:
-            return best_action
+        # best_action, q_values = self.get_best_action(state)
+        # candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
+        # # print(best_action, candidate_actions, q_values)
+        # # exit(0)
+        # if np.random.random() < self.config.soft_epsilon:
+        #     return np.random.choice(candidate_actions, 1)
+        # else:
+        #     return best_action
 
         # original version
-        # if np.random.random() < self.config.soft_epsilon:
-        #     return self.env.action_space.sample()
-        # else:
-        #     return self.get_best_action(state)[0]
+        if np.random.random() < self.config.soft_epsilon:
+            return self.env.action_space.sample()
+        else:
+            return self.get_best_action(state)[0]
 
 
     def update_target_params(self):
@@ -190,7 +190,6 @@ class QN(object):
                 t += 1
                 last_eval += 1
                 last_record += 1
-                last_save += 1
                 if self.config.render_train: self.env.render()
                 # replay memory stuff
                 idx      = replay_buffer.store_frame(state)
@@ -248,17 +247,25 @@ class QN(object):
                 last_eval = 0
                 print("")
                 scores_eval += [self.evaluate()]
+                for i in range(len(self.config.checkpoint_interval)):
+                    s = self.config.checkpoint_interval[i][0]
+                    e = self.config.checkpoint_interval[i][1]
+                    if scores_eval[-1] > s and scores_eval[-1] <= e:
+                        self.save_checkpoint(self.config.checkpoint_path + str(i)+'/')
+                        self.logger.info("Saving checkpoints...")
+
+
 
             if (t > self.config.learning_start) and self.config.record and (last_record > self.config.record_freq):
                 self.logger.info("Recording...")
                 last_record =0
                 self.record()
 
-            if (t > self.config.learning_start) and (last_save > self.config.checkpoint_freq):
-                last_save = 0
-                sys.stdout.write("\rSaving the checkpoint, last eval reward: {}...".format(scores_eval[-1]))
-                sys.stdout.flush()                
-                self.save_checkpoint(self.config.checkpoint_path + str(last_save))
+             
+            
+            # if (t > self.config.learning_start) and (t % self.config.checkpoint_freq == 0):              
+            #     self.save_checkpoint(self.config.checkpoint_path + str(last_save)+'/')
+            #     # last_save = 0
 
         # last words
         self.logger.info("- Training done.")

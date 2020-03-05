@@ -36,10 +36,10 @@ class MaxAndSkipEnv(gym.Wrapper):
                 break
         # print(total_reward)
         total_info["delta_score"] = total_reward
-        if abs(total_reward) < 0.1:
-            total_reward = 0.01
-        else :
-            total_reward = 0.1*total_reward
+        # if abs(total_reward) < 0.1:
+        #     total_reward = 0.01
+        # else :
+        #     total_reward = 0.1*total_reward
             # np.random.choice([-1.0, 1.0], replace=True)
 
         max_frame = np.max(np.stack(self._obs_buffer), axis=0)
@@ -51,6 +51,37 @@ class MaxAndSkipEnv(gym.Wrapper):
         obs = self.env.reset()
         self._obs_buffer.append(obs)
         return obs
+
+
+class MaxAndSkipEnvForTest(gym.Wrapper):
+    """
+    Wrapper from Berkeley's Assignment
+    Takes a max pool over the last n states
+    """
+    def __init__(self, env=None):
+        """Return only every `skip`-th frame"""
+        super(MaxAndSkipEnvForTest, self).__init__(env)
+        init_frame = self.env.reset()
+        # most recent raw observations (for max pooling across time steps)
+        self._frame_buffer = deque(maxlen=4)
+        for i in range(4):
+            self._frame_buffer.append(np.zeros((80,80,1)))
+
+    def step(self, action):        
+        obs, reward, done, info = self.env.step(action)
+        self._frame_buffer.append(obs)
+        frame = np.concatenate(self._frame_buffer, 2)      
+
+        return frame, reward, done, info
+
+    def reset(self):
+        """Clear past frame buffer and init. to first obs. from inner env."""
+        obs = self.env.reset()
+        for i in range(4):
+            self._frame_buffer.append(np.zeros((80,80,1)))
+        self._frame_buffer.append(obs)
+        frame = np.concatenate(self._frame_buffer, 2) 
+        return frame
 
 
 

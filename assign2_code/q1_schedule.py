@@ -81,19 +81,19 @@ class LinearExploration(LinearSchedule):
         ##############################################################
         ################ YOUR CODE HERE - 4-5 lines ##################
 
-        # add q_value sorting
-        candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
-        if np.random.random() < self.epsilon:
-            return np.random.choice(candidate_actions, 1)
-        else:
-            return best_action
+        # # add q_value sorting
+        # candidate_actions = np.argsort(q_values)[::-1][:3]  # first 4 actions with highest q values
+        # if np.random.random() < self.epsilon:
+        #     return np.random.choice(candidate_actions, 1)
+        # else:
+        #     return best_action
 
         # original version
-        # prob=np.random.rand()
-        # if prob < self.epsilon:
-        #     return self.env.action_space.sample()
-        # else :
-        #     return best_action
+        prob=np.random.rand()
+        if prob < self.epsilon:
+            return self.env.action_space.sample()
+        else :
+            return best_action
 
         ##############################################################
         ######################## END YOUR CODE #######################

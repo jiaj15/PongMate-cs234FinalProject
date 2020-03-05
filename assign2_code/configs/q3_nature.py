@@ -12,6 +12,9 @@ class config():
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
 
+    checkpoint_path = output_path + "checkpoints/"
+    checkpoint_freq = 100
+
     # model and training config
     num_episodes_test = 20
     grad_clip         = True
