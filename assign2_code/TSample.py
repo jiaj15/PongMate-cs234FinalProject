@@ -92,7 +92,8 @@ class TSampling(object):
                 level = np.argmin(self.samples)
                 self.model.load(self.levels[level])
                 self.logger.info("use model in level {}".format(self.levels[level]))
-                action = self.models[level].predict(state)[0]
+                #action = self.models[level].predict(state)[0]
+                action = self.model.predict(state)[0]
 
                 new_state, reward, done, info = self.env.step(action)
 
