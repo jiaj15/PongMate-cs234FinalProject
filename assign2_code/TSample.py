@@ -43,8 +43,6 @@ class TSampling(object):
         model.load(0, well_trained=True)
         self.models.append(model)
 
-
-
         self.env = MaxAndSkipEnvForTest(self.env)
 
         # all variables need for Thompson Sampling
@@ -71,12 +69,13 @@ class TSampling(object):
         while t < game_num:
 
             state = self.env.reset()
+            self.win = 0
+            self.lose = 0
 
             while True:
 
                 # use Thompson to get all samples for all models
                 for i in range(self.bandit_num):
-                    print("!!!!!", self.probs[i][0],self.probs[i][1])
                     self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - 0.5)
                     self.entropy[i] = self.kl_divergence(i)
 
@@ -84,8 +83,7 @@ class TSampling(object):
                 action = self.models[level].predict(state)[0]
 
                 new_state, reward, done, info = self.env.step(action)
-		#print("@@@@@",level)
-                print("@@@@@",level)
+
                 # when one side scores, make a record
                 if reward == -1:
 
@@ -104,10 +102,11 @@ class TSampling(object):
                 state = new_state
 
                 if done:
-                    self.logger.info("One game over, score is({},{})".format(self.lose,self.win))
+                    self.logger.info("One game over, score is({},{})".format(self.lose, self.win))
                     break
 
-                #self.env.render()
+                # self.env.render()
+            i += 1
 
     def kl_divergence(self, bandit):
 
@@ -123,8 +122,8 @@ class TSampling(object):
 
 
 if __name__ == '__main__':
-    test = TSampling(8,config)
-    test.run(1)
+    test = TSampling(8, config)
+    test.run(3)
     # env = gym.make(config.env_name)
     # env = MaxAndSkipEnv(env, skip=config.skip_frame)
     # env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
@@ -146,6 +145,3 @@ if __name__ == '__main__':
     #         #env.render()
     #
     # print(model.predict(ob))
-
-
-
