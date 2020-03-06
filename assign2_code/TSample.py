@@ -41,6 +41,7 @@ class TSampling(object):
         # for test
         model = NatureQN(self.env, config)
         model.load(0, well_trained=True)
+        self.models.append(model)
 
 
 
