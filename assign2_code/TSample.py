@@ -30,14 +30,13 @@ class TSampling(object):
         self.make_env()
 
         self.models = []
-        for i in range(bandit_num_upper):
-            model = NatureQN(self.env, config)
-            if os.path.exists(self.config.checkpoint_path + str(i)):
+        for bandit in range(bandit_num_upper):
+            if os.path.exists(self.config.checkpoint_path + str(bandit)):
                 model = NatureQN(self.env, config)
-                model.load(i)
-                print("---------------------",i)
+                model.load(bandit)
+                print("---------------------", bandit)
                 self.models.append(model)
-                self.logger.info("loading model in level {}".format(i))
+                self.logger.info("loading model in level {}".format(bandit))
 
         self.env = MaxAndSkipEnvForTest(self.env)
 
@@ -115,29 +114,29 @@ class TSampling(object):
 
 
 if __name__ == '__main__':
-    # test = TSampling(8,config)
-    # test.run(1)
-    env = gym.make(config.env_name)
-    env = MaxAndSkipEnv(env, skip=config.skip_frame)
-    env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
-                        overwrite_render=config.overwrite_render)
-
-    model = NatureQN(env, config)
-    model.load(0, well_trained=True)
-
-    env = MaxAndSkipEnvForTest(env)
-
-    ob = env.reset()
-    for i in range(20):
-        ob = env.reset()
-        while True:
-            action = model.predict(ob)[0]
-            ob, r, done, info = env.step(action)
-            if done:
-                break
-            #env.render()
-
-    print(model.predict(ob))
+    test = TSampling(8,config)
+    test.run(1)
+    # env = gym.make(config.env_name)
+    # env = MaxAndSkipEnv(env, skip=config.skip_frame)
+    # env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
+    #                     overwrite_render=config.overwrite_render)
+    #
+    # model = NatureQN(env, config)
+    # model.load(0, well_trained=True)
+    #
+    # env = MaxAndSkipEnvForTest(env)
+    #
+    # ob = env.reset()
+    # for i in range(20):
+    #     ob = env.reset()
+    #     while True:
+    #         action = model.predict(ob)[0]
+    #         ob, r, done, info = env.step(action)
+    #         if done:
+    #             break
+    #         #env.render()
+    #
+    # print(model.predict(ob))
 
 
 
