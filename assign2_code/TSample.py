@@ -80,7 +80,7 @@ class TSampling(object):
                     self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - 0.5)
                     self.entropy[i] = self.kl_divergence(i)
 
-                level = np.argmin(self.samples)[0]
+                level = np.argmin(self.samples)
                 action = self.models[level].predict(state)[0]
 
                 new_state, reward, done, info = self.env.step(action)
