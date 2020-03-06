@@ -34,7 +34,7 @@ class TSampling(object):
             model = NatureQN(self.env, config)
             if os.path.exists(self.config.checkpoint_path + str(i)):
                 model = NatureQN(self.env, config)
-                model.load(i, well_trained=True)
+                model.load(i)
                 print("---------------------",i)
                 self.models.append(model)
                 self.logger.info("loading model in level {}".format(i))
@@ -82,14 +82,14 @@ class TSampling(object):
                 if reward == -1:
 
                     self.lose += 1
-                    for i in range(0, level + 1):
-                        self.probs[i][0] += 1
+                    for j in range(0, level + 1):
+                        self.probs[j][0] += 1
 
                 elif reward == 1:
 
                     self.win += 1
-                    for i in range(level, self.bandit_num + 1):
-                        self.probs[i][1] += 1
+                    for j in range(level, self.bandit_num + 1):
+                        self.probs[j][1] += 1
                 else:
                     pass
 
@@ -114,8 +114,29 @@ class TSampling(object):
 
 
 if __name__ == '__main__':
-    test = TSampling(8,config)
-    test.run(1)
+    # test = TSampling(8,config)
+    # test.run(1)
+    env = gym.make(config.env_name)
+    env = MaxAndSkipEnv(env, skip=config.skip_frame)
+    env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
+                        overwrite_render=config.overwrite_render)
+
+    model = NatureQN(env, config)
+    model.load(0, well_trained=True)
+
+    env = MaxAndSkipEnvForTest(env)
+
+    ob = env.reset()
+    for i in range(20):
+        ob = env.reset()
+        while True:
+            action = model.predict(ob)[0]
+            ob, r, done, info = env.step(action)
+            if done:
+                break
+            env.render()
+
+    print(model.predict(ob))
 
 
 
