@@ -1,45 +1,54 @@
 import numpy as np
 import gym
+import logging
 import tensorflow as tf
 import scipy.stats as sys
+import os
 from scipy.special import rel_entr
 
 from utils.preprocess import greyscale
-from utils.wrappers import PreproWrapper, MaxAndSkipEnv
+from utils.wrappers import *
+from utils.general import get_logger
 
 from q1_schedule import LinearExploration, LinearSchedule
 from q3_nature import NatureQN
-from configs.q5_train_atari_nature import config
+from configs.ts_config import config
 
 
 class TSampling(object):
 
-    def _init_(self, bandit_num, model_path):
-
-        # all variables need for Thompson Sampling
-        self.bandit_num = bandit_num
-        self.rnd = np.random.RandomState()
-        self.probs = np.zeros((bandit_num, 2))
-        self.samples = np.ones(bandit_num)
-        self.entropy = np.zeros(bandit_num)
-        self.standord = sys.beta(100, 100)
+    def __init__(self, bandit_num_upper, config):
 
         # used to control when to stop the game
         self.win = 0
         self.lose = 0
 
+        self.config = config
+        self.logger = get_logger(self.config.log_path)
+
         # make the env
         self.make_env()
 
-        # load all the models
-        self.sess = tf.Session()
-        self.saver = tf.train.Saver()
-
         self.models = []
-        for i in range(bandit_num):
+        for i in range(bandit_num_upper):
             model = NatureQN(self.env, config)
-            self.saver.restore(self.sess, model_path)
-            self.models.append(model)
+            if os.path.exists(self.config.checkpoint_path + str(i)):
+                model = NatureQN(self.env, config)
+                model.load(i, well_trained=True)
+                self.models.append(model)
+                self.logger.info("loading model in level {}".format(i))
+
+        self.env = MaxAndSkipEnvForTest(self.env)
+
+        # all variables need for Thompson Sampling
+        self.bandit_num = len(self.models)
+        self.rnd = np.random.RandomState()
+        self.probs = np.zeros((self.bandit_num, 2))
+        self.samples = np.ones(self.bandit_num)
+        self.entropy = np.zeros(self.bandit_num)
+        self.standord = sys.beta(100, 100)
+
+        self.logger.info("loading done, we have {} levels of model".format(self.bandit_num))
 
     def make_env(self):
 
@@ -64,7 +73,7 @@ class TSampling(object):
                     self.entropy[i] = self.kl_divergence(i)
 
                 level = np.argmin(self.samples)[0]
-                action = self.models[level].predict(state)
+                action = self.models[level].predict(state)[0]
 
                 new_state, reward, done, info = self.env.step(action)
 
@@ -88,6 +97,8 @@ class TSampling(object):
                 if done:
                     break
 
+                self.env.render()
+
     def kl_divergence(self, bandit):
 
         a = self.probs[bandit][0]
@@ -98,4 +109,12 @@ class TSampling(object):
         p = sys.beta(a, b).pdf(x)
         q = self.standord.pdf(x)
 
-        return rel_entr(p, q)
+        return sum(rel_entr(p, q))
+
+
+if __name__ == '__main__':
+    test = TSampling(8,config)
+    test.run(1)
+
+
+
