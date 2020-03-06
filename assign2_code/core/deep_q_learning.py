@@ -97,14 +97,14 @@ class DQN(QN):
 
         # compute Q values of state
         s = self.process_state(self.s)
-        self.q = self.get_q_values_op(s, scope="q", reuse=False)
+        self.q = self.get_q_values_op(s, scope="q", reuse=tf.AUTO_REUSE)
 
         # compute Q values of next state
         sp = self.process_state(self.sp)
-        self.target_q = self.get_q_values_op(sp, scope="target_q", reuse=False)
+        self.target_q = self.get_q_values_op(sp, scope="target_q", reuse=tf.AUTO_REUSE)
 
 
-        self.next_q = self.get_q_values_op(sp, scope="next_q", reuse=False)
+        self.next_q = self.get_q_values_op(sp, scope="next_q", reuse=tf.AUTO_REUSE)
 
         # share the parameters between q and next_q
         self.add_copy_model_op("q", "next_q")
