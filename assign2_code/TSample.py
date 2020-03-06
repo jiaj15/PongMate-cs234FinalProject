@@ -29,14 +29,23 @@ class TSampling(object):
         # make the env
         self.make_env()
 
-        self.models = []
+        # self.models = []
+        # for bandit in range(bandit_num_upper):
+        #     if os.path.exists(self.config.checkpoint_path + str(bandit)):
+        #         model = NatureQN(self.env, config)
+        #         model.load(bandit)
+        #         print("---------------------", bandit)
+        #         self.models.append(model)
+        #         self.logger.info("loading model in level {}".format(bandit))
+
+        self.model = NatureQN(self.env, config)
+
+        self.levels = []
         for bandit in range(bandit_num_upper):
             if os.path.exists(self.config.checkpoint_path + str(bandit)):
-                model = NatureQN(self.env, config)
-                model.load(bandit)
-                print("---------------------", bandit)
-                self.models.append(model)
-                self.logger.info("loading model in level {}".format(bandit))
+                self.levels.append(bandit)
+
+
 
         # for test
         # model = NatureQN(self.env, config)
@@ -46,7 +55,8 @@ class TSampling(object):
         self.env = MaxAndSkipEnvForTest(self.env)
 
         # all variables need for Thompson Sampling
-        self.bandit_num = len(self.models)
+        # self.bandit_num = len(self.models)
+        self.bandit_num = len(self.levels)
         self.rnd = np.random.RandomState()
         self.probs = np.ones((self.bandit_num, 2))
         self.samples = np.ones(self.bandit_num)
@@ -80,6 +90,8 @@ class TSampling(object):
                     self.entropy[i] = self.kl_divergence(i)
 
                 level = np.argmin(self.samples)
+                self.model.load(self.levels[level])
+                self.logger.info("use model in level {}".format(self.levels[level]))
                 action = self.models[level].predict(state)[0]
 
                 new_state, reward, done, info = self.env.step(action)
