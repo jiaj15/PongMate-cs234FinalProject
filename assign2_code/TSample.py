@@ -30,18 +30,18 @@ class TSampling(object):
         self.make_env()
 
         self.models = []
-        # for bandit in range(bandit_num_upper):
-        #     if os.path.exists(self.config.checkpoint_path + str(bandit)):
-        #         model = NatureQN(self.env, config)
-        #         model.load(bandit)
-        #         print("---------------------", bandit)
-        #         self.models.append(model)
-        #         self.logger.info("loading model in level {}".format(bandit))
+        for bandit in range(bandit_num_upper):
+            if os.path.exists(self.config.checkpoint_path + str(bandit)):
+                model = NatureQN(self.env, config)
+                model.load(bandit)
+                print("---------------------", bandit)
+                self.models.append(model)
+                self.logger.info("loading model in level {}".format(bandit))
 
         # for test
-        model = NatureQN(self.env, config)
-        model.load(0, well_trained=True)
-        self.models.append(model)
+        # model = NatureQN(self.env, config)
+        # model.load(0, well_trained=True)
+        # self.models.append(model)
 
         self.env = MaxAndSkipEnvForTest(self.env)
 
