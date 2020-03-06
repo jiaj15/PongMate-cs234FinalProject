@@ -110,13 +110,13 @@ class TSampling(object):
 
                     self.lose += 1
                     for j in range(0, self.level + 1):
-                        self.probs[j][0] += 1
+                        self.probs[j][0] += 0.2
 
                 elif reward == 1:
 
                     self.win += 1
                     for j in range(self.level, self.bandit_num):
-                        self.probs[j][1] += 1
+                        self.probs[j][1] += 0.2
                 else:
                     pass
 
@@ -131,7 +131,7 @@ class TSampling(object):
 
 
                 state = new_state
-
+                self.env.render()
                 if done:
                     self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, step))
                     break
@@ -154,7 +154,7 @@ class TSampling(object):
 
 if __name__ == '__main__':
     test = TSampling(8, config)
-    test.run(3)
+    test.run(10)
     # env = gym.make(config.env_name)
     # env = MaxAndSkipEnv(env, skip=config.skip_frame)
     # env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),

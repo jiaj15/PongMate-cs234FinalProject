@@ -15,7 +15,7 @@ class config():
     plot_output  = output_path + "scores.png"
     record_path  = output_path + "monitor/"
 
-    checkpoint_path = output_path + "checkpoints/"
+    checkpoint_path = output_path + "checkpoints/checkpoints/"
     checkpoint_freq = 250000
 
     # model and training config
