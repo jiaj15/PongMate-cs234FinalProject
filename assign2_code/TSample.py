@@ -35,6 +35,7 @@ class TSampling(object):
             if os.path.exists(self.config.checkpoint_path + str(i)):
                 model = NatureQN(self.env, config)
                 model.load(i, well_trained=True)
+                print("---------------------",i)
                 self.models.append(model)
                 self.logger.info("loading model in level {}".format(i))
 
