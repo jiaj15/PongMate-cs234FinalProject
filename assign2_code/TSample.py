@@ -106,7 +106,7 @@ class TSampling(object):
                     break
 
                 # self.env.render()
-            i += 1
+            t += 1
 
     def kl_divergence(self, bandit):
 
