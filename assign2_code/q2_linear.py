@@ -64,7 +64,7 @@ class Linear(DQN):
         ##############################################################
         ######################## END YOUR CODE #######################
 
-    def get_q_values_op(self, state, scope, reuse=False):
+    def get_q_values_op(self, state, scope, reuse=tf.AUTO_REUSE):
         """
         Returns Q values for all actions
 
