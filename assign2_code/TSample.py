@@ -69,6 +69,7 @@ class TSampling(object):
 
         # get the env
         self.env = gym.make("Pong-v0")
+        self.env = gym.wrappers.Monitor(self.env, self.config.record_path, video_callable=lambda x: True, resume=True)
         self.env = MaxAndSkipEnv(self.env, skip=config.skip_frame)
         self.env = PreproWrapper(self.env, prepro=greyscale, shape=(80, 80, 1),
                                  overwrite_render=config.overwrite_render)
