@@ -50,7 +50,7 @@ class TSampling(object):
         # all variables need for Thompson Sampling
         self.bandit_num = len(self.models)
         self.rnd = np.random.RandomState()
-        self.probs = np.zeros((self.bandit_num, 2))
+        self.probs = np.ones((self.bandit_num, 2))
         self.samples = np.ones(self.bandit_num)
         self.entropy = np.zeros(self.bandit_num)
         self.standord = sys.beta(100, 100)
