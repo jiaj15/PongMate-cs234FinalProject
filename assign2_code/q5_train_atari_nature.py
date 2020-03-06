@@ -1,4 +1,6 @@
 import gym
+import retro
+from two_agent import *
 from utils.preprocess import greyscale
 from utils.wrappers import *
 
@@ -28,8 +30,17 @@ address-ip-of-the-server:6006
 """
 if __name__ == '__main__':
     # make env
-    # config = config
-    env = gym.make(config.env_name)
+#     config = config_short
+#     env = gym.make(config.env_name)
+#     env = MaxAndSkipEnv(env, skip=config.skip_frame)
+#     env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
+#                         overwrite_render=config.overwrite_render)
+
+    env = retro.make(game='Pong-Atari2600', use_restricted_actions=retro.Actions.DISCRETE) 
+    env = retroActionWrapper(env)
+    env = retroWrapper(env)
+
+    # env = gym.make('Pong-v0')
     env = MaxAndSkipEnv(env, skip=config.skip_frame)
     env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
                         overwrite_render=config.overwrite_render)
