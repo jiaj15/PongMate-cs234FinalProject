@@ -76,8 +76,8 @@ class TSampling(object):
 
                 # use Thompson to get all samples for all models
                 for i in range(self.bandit_num):
-                    print("!!!!!", self.rnd.beta(self.probs[i], self.probs[i]))
-                    self.samples[i] = np.abs(self.rnd.beta(self.probs[i], self.probs[i]) - 0.5)
+                    print("!!!!!", self.probs[i][0],self.probs[i][1])
+                    self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - 0.5)
                     self.entropy[i] = self.kl_divergence(i)
 
                 level = np.argmin(self.samples)[0]
