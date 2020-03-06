@@ -84,7 +84,8 @@ class TSampling(object):
                 action = self.models[level].predict(state)[0]
 
                 new_state, reward, done, info = self.env.step(action)
-
+		#print("@@@@@",level)
+                print("@@@@@",level)
                 # when one side scores, make a record
                 if reward == -1:
 
@@ -95,7 +96,7 @@ class TSampling(object):
                 elif reward == 1:
 
                     self.win += 1
-                    for j in range(level, self.bandit_num + 1):
+                    for j in range(level, self.bandit_num):
                         self.probs[j][1] += 1
                 else:
                     pass
