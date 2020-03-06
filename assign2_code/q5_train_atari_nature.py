@@ -66,7 +66,7 @@ if __name__ == '__main__':
                 ob, r, done, info = env.step(action)
                 if done:
                         break
-                env.render()
+                #env.render()
         
         
     print(model.predict(ob))

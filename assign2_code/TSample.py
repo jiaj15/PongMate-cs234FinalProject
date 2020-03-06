@@ -96,9 +96,10 @@ class TSampling(object):
                 state = new_state
 
                 if done:
+                    self.logger.info("One game over, score is({},{})".format(self.lose,self.win))
                     break
 
-                self.env.render()
+                #self.env.render()
 
     def kl_divergence(self, bandit):
 
@@ -134,7 +135,7 @@ if __name__ == '__main__':
             ob, r, done, info = env.step(action)
             if done:
                 break
-            env.render()
+            #env.render()
 
     print(model.predict(ob))
 
