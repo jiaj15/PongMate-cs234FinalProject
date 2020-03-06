@@ -15,9 +15,15 @@ from q3_nature import NatureQN
 from configs.ts_config import config
 
 
+
+
 class TSampling(object):
 
     def __init__(self, bandit_num_upper, config):
+
+        # some parameters to tune
+        self.GAP = 1
+        self.EXPECTATION = 0.5
 
         # used to control when to stop the game
         self.win = 0
@@ -46,12 +52,6 @@ class TSampling(object):
                 self.levels.append(bandit)
 
 
-
-        # for test
-        # model = NatureQN(self.env, config)
-        # model.load(0, well_trained=True)
-        # self.models.append(model)
-
         self.env = MaxAndSkipEnvForTest(self.env)
 
         # all variables need for Thompson Sampling
@@ -59,6 +59,7 @@ class TSampling(object):
         self.bandit_num = len(self.levels)
         self.rnd = np.random.RandomState()
         self.probs = np.ones((self.bandit_num, 2))
+        self.init_probs_backup = np.ones((self.bandit_num, 2))
         self.samples = np.ones(self.bandit_num)
         self.entropy = np.zeros(self.bandit_num)
         self.standord = sys.beta(100, 100)
@@ -86,23 +87,14 @@ class TSampling(object):
             self.win = 0
             self.lose = 0
             step = 0
+            self.probs = self.init_probs_backup
 
 
             while True:
 
                 step += 1
 
-                # use Thompson to get all samples for all models
-                # for i in range(self.bandit_num):
-                #     self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - 0.5)
-                #     self.entropy[i] = self.kl_divergence(i)
-                #
-                # self.level = np.argmin(self.samples)
-                # self.model.load(self.levels[self.level])
-                # self.logger.info("use model in level {}".format(self.levels[level]))
-                #action = self.models[level].predict(state)[0]
                 action = self.model.predict(state)[0]
-
                 new_state, reward, done, info = self.env.step(action)
 
                 # when one side scores, make a record
@@ -110,30 +102,41 @@ class TSampling(object):
 
                     self.lose += 1
                     for j in range(0, self.level + 1):
-                        self.probs[j][0] += 0.2
+                        self.probs[j][0] += 1
 
                 elif reward == 1:
 
                     self.win += 1
                     for j in range(self.level, self.bandit_num):
-                        self.probs[j][1] += 0.2
+                        self.probs[j][1] += 1
                 else:
                     pass
 
                 if reward == -1 or reward == 1:
                     for i in range(self.bandit_num):
-                        self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - 0.5)
-                        self.entropy[i] = self.kl_divergence(i)
+                        self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - self.EXPECTATION)
+                    level = np.argmin(self.samples)
 
-                    self.level = np.argmin(self.samples)
-                    self.model.load(self.levels[self.level])
+                    if level != self.level:
+                        self.level = level
+                        self.model.load(self.levels[self.level])
                     self.logger.info("use model in level {}".format(self.levels[self.level]))
 
-
                 state = new_state
-                self.env.render()
+                # self.env.render()
                 if done:
                     self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, step))
+                    for i in range(self.bandit_num):
+                        self.entropy[i] = self.kl_divergence(i)
+                    guess = np.argmin(self.entropy)
+                    self.init_probs_backup[guess][0] += 1
+                    self.init_probs_backup[guess][1] += 1
+                    if self.lose > self.win + self.GAP and guess + 1 < self.bandit_num:
+                        self.init_probs_backup[guess + 1][0] += 1
+                        self.init_probs_backup[guess + 1][1] += 1
+                    if self.win > self.lose + self.GAP and guess - 1 >= 0:
+                        self.init_probs_backup[guess - 1][0] += 1
+                        self.init_probs_backup[guess - 1][1] += 1
                     break
 
                 # self.env.render()
