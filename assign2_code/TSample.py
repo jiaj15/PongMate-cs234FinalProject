@@ -76,7 +76,8 @@ class TSampling(object):
     def run(self, game_num):
 
         t = 0
-        self.model.load(self.levels[self.bandit_num//2])
+        self.level = self.bandit_num//2
+        self.model.load(self.levels[self.level])
 
         while t < game_num:
 
