@@ -37,7 +37,7 @@ class retroWrapper(gym.Wrapper):
         for _ in range(num_steps):
             ob, r, done, info = self.env.step(a)
             reward += r
-        return ob, r, done, info
+        return ob, reward, done, info
 
 class StableBaselineAgent(object):
     """
