@@ -250,10 +250,13 @@ class QN(object):
                 for i in range(len(self.config.checkpoint_interval)):
                     s = self.config.checkpoint_interval[i][0]
                     e = self.config.checkpoint_interval[i][1]
-                    path = self.config.checkpoint_path + str(i)+'/'
-                    if scores_eval[-1] > s and scores_eval[-1] <= e and (not os.path.exists(path)):
-                        self.save_checkpoint(path)
-                        self.logger.info("Saving checkpoints...")
+                    ckt_path = self.config.checkpoint_path + str(i)+'/'
+                    if scores_eval[-1] > s and scores_eval[-1] <= e:
+                        if os.path.exists(ckt_path+'model'+str(i)):
+                            pass
+                        else:
+                            self.save_checkpoint(ckt_path)
+                            self.logger.info("Saving checkpoints...")
 
 
 
