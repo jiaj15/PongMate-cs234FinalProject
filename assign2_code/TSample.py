@@ -62,7 +62,7 @@ class TSampling(object):
         self.init_probs_backup = np.ones((self.bandit_num, 2))
         self.samples = np.ones(self.bandit_num)
         self.entropy = np.zeros(self.bandit_num)
-        self.standord = sys.beta(100, 100)
+        self.standord = sys.beta(3, 3)
 
         self.logger.info("loading done, we have {} levels of model".format(self.bandit_num))
 
@@ -87,12 +87,13 @@ class TSampling(object):
             self.win = 0
             self.lose = 0
             step = 0
-            self.probs = self.init_probs_backup
-
+            self.probs[:,:] = self.init_probs_backup[:,:]
+            print(self.probs,self.init_probs_backup)
 
             while True:
 
                 step += 1
+               # print(self.init_probs_backup)
 
                 action = self.model.predict(state)[0]
                 new_state, reward, done, info = self.env.step(action)
