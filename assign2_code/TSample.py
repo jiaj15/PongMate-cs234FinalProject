@@ -94,6 +94,7 @@ class TSampling(object):
         self.step = 0
         self.e = 0.9
         self.results = []
+        self.rewards = []
 
     def make_env(self):
 
@@ -143,6 +144,7 @@ class TSampling(object):
 
         if reward == -1 or reward == 1:
             self.results.append(self.levels[self.level])
+            self.rewards.append(reward)
             for i in range(self.bandit_num):
                 self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - self.EXPECTATION)
             level = np.argmin(self.samples)
@@ -178,6 +180,7 @@ class TSampling(object):
                 self.step = 0
 
                 self.results = []
+                self.rewards = []
 
 
     def cleanMemory(self):
@@ -200,6 +203,7 @@ class TSampling(object):
         # with open("results.txt", 'a+') as f:
         f = open(file_name, 'a+')
         f.write(str(self.results)[1:-1] + "\n")
+        f.write(str(self.rewards)[1:-1] + "\n")
         f.write(str(self.lose) + ", " + str(self.win) + ", " + str(self.step) + ", " + str(self.e) + "\n")
         #f.close()
 
