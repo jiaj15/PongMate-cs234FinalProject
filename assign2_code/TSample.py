@@ -171,11 +171,12 @@ class TSampling(object):
                     self.init_probs_backup[guess - 1][0] += 1
                     self.init_probs_backup[guess - 1][1] += 1
 
+                self.writeDate("results.txt")
                 self.probs[:, :] = self.init_probs_backup[:, :]
                 self.win = 0
                 self.lose = 0
                 self.step = 0
-                self.writeDate("results.txt")
+
                 self.results = []
 
 
