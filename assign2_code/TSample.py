@@ -107,14 +107,12 @@ class TSampling(object):
 
             self.lose += 1
             self.probs[self.level][0] += 1
-            self.probs[self.level][1] += 1
             for j in range(0, self.level):
                 self.probs[j][0] += self.OTHERUPDATE
 
         elif reward == 1:
 
             self.win += 1
-            self.probs[self.level][0] += 1
             self.probs[self.level][1] += 1
             for j in range(self.level + 1, self.bandit_num):
                 self.probs[j][1] += self.OTHERUPDATE
