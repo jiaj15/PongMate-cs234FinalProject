@@ -49,14 +49,7 @@ class TSampling(object):
 
 
         #self.model = NatureQN(self.env, config)
-        self.g1 = tf.Graph()
-        self.g2 = tf.Graph()
 
-        with self.g1.as_default():
-            self.model = NatureQN(env, config)
-        with self.g2.as_default():
-            self.human_model = NatureQN(env, config)
-            self.human_model.load(0, well_trained=True)
 
         self.levels = []
         for bandit in range(bandit_num_upper):
@@ -80,7 +73,18 @@ class TSampling(object):
         self.logger.info("loading done, we have {} levels of model".format(self.bandit_num))
 
         self.level = self.bandit_num // 2
-        self.model.load(self.levels[self.level])
+
+        self.g1 = tf.Graph()
+        self.g2 = tf.Graph()
+
+        with self.g1.as_default():
+            self.model = NatureQN(env, config)
+            self.model.load(self.levels[self.level])
+        with self.g2.as_default():
+            self.human_model = NatureQN(env, config)
+            self.human_model.load(0, well_trained=True)
+
+
 
         self.win = 0
         self.lose = 0
@@ -139,7 +143,8 @@ class TSampling(object):
 
             if level != self.level:
                 self.level = level
-                self.model.load(self.levels[self.level])
+                with self.g1.as_default():
+                    self.model.load(self.levels[self.level])
             # self.model.load(self.levels[self.level])
 
             if done:
@@ -259,8 +264,8 @@ class TSampling(object):
 
 
 if __name__ == '__main__':
-    test = TSampling(8, config)
-    test.run(10)
+    # test = TSampling(8, config)
+    # test.run(10)
     # env = gym.make(config.env_name)
     # env = MaxAndSkipEnv(env, skip=config.skip_frame)
     # env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
@@ -282,3 +287,20 @@ if __name__ == '__main__':
     #         #env.render()
     #
     # print(model.predict(ob))
+
+    env = gym.make(config.env_name)
+    env = MaxAndSkipEnv(env, skip=config.skip_frame)
+    env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1),
+                        overwrite_render=config.overwrite_render)
+    test = TSampling(4, config, env)
+    env = MaxAndSkipEnvForTest(env)
+    state = env.reset()
+    while True:
+        a1 = test.action_ts(state)
+        a2 = test.action_human(state,0.9)
+        print(a1, a2)
+        new_state, reward, done, info = env.step(a1)
+        state = new_state
+
+
+
