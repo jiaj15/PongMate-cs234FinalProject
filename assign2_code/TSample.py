@@ -19,7 +19,7 @@ from configs.ts_config import config
 
 class TSampling(object):
 
-    def __init__(self, bandit_num_upper, config):
+    def __init__(self, bandit_num_upper, config, env):
 
         # some parameters to tune
         self.GAP = 1
@@ -34,7 +34,7 @@ class TSampling(object):
         self.logger = get_logger(self.config.log_path)
 
         # make the env
-        self.make_env()
+        # self.make_env()
 
         # self.models = []
         # for bandit in range(bandit_num_upper):
@@ -45,7 +45,10 @@ class TSampling(object):
         #         self.models.append(model)
         #         self.logger.info("loading model in level {}".format(bandit))
 
-        self.model = NatureQN(self.env, config)
+
+
+        #self.model = NatureQN(self.env, config)
+        self.model = NatureQN(env, config)
 
         self.levels = []
         for bandit in range(1, bandit_num_upper):
@@ -53,7 +56,7 @@ class TSampling(object):
                 self.levels.append(bandit)
 
 
-        self.env = MaxAndSkipEnvForTest(self.env)
+        # self.env = MaxAndSkipEnvForTest(self.env)
 
 
         # all variables need for Thompson Sampling
