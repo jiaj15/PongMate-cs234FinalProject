@@ -89,6 +89,7 @@ class TSampling(object):
         self.win = 0
         self.lose = 0
         self.step = 0
+        self.e = 0.9
 
     def make_env(self):
 
@@ -103,11 +104,11 @@ class TSampling(object):
         """ when get a state, return the action according to the model it chooses"""
         with self.g1.as_default():
             action = self.model.predict(state)[0]
-        self.logger.info("AI use model in level {}".format(self.levels[self.level]))
         return action
 
     def action_human(self, state, human_level_episilon):
-        self.logger.info("human use model in level {}".format(human_level_episilon))
+
+        self.e = human_level_episilon
         with self.g2.as_default():
             best_action = self.human_model.predict(state)[0]
         if np.random.random() < human_level_episilon:
@@ -146,9 +147,13 @@ class TSampling(object):
                 with self.g1.as_default():
                     self.model.load(self.levels[self.level])
             # self.model.load(self.levels[self.level])
+            self.logger.info("AI use model in level {}".format(self.levels[self.level]))
+            #self.logger.info("human use model in level {}".format(human_level_episilon))
 
             if done:
-                self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, self.step))
+                self.logger.info(
+                    "One game over, score is({},{}, whole steps are {}, human level is {})".format(self.lose, self.win,
+                                                                                                   self.step, self.e))
                 for i in range(self.bandit_num):
                     self.entropy[i] = self.kl_divergence(i)
                 guess = np.argmin(self.entropy)
