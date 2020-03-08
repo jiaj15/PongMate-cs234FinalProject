@@ -358,23 +358,24 @@ if __name__ == "__main__":
     # env = gym.make('Pong-v0')
 
     # # print(retro.data.list_games())
-    # env = retro.make(game='Pong-Atari2600', players=2)
+    env = retro.make(game='Pong-Atari2600', players=2)
 
-    # test_env = PongDiscretizer(env, players=2)
-    # #test_env = retroActionWrapper(env, agent_num=2)
-    # print(test_env.action_space.n)
-    # test_env = retroTwoWrapper(test_env)
-    # test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
-    # test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
-    #                     overwrite_render=config.overwrite_render)
-    # test_env = MaxAndSkipEnvForTest(test_env)
+    test_env = PongDiscretizer(env, players=2)
+    #test_env = retroActionWrapper(env, agent_num=2)
+    print(test_env.action_space.n)
+    test_env = retroTwoWrapper(test_env)
+    test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
+    test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
+                        overwrite_render=config.overwrite_render)
+    test_env = MaxAndSkipEnvForTest(test_env)
 
-    # config_env = PongDiscretizer(env, players=1)
-    # config_env = retroActionWrapper(env, agent_num=1)
-    # config_env = retroOneWrapper(config_env) 
-    # config_env = MaxAndSkipEnv(config_env, skip=config.skip_frame)
-    # config_env = PreproWrapper(config_env, prepro=greyscale, shape=(80, 80, 1),
-    #                      overwrite_render=config.overwrite_render)
+    config_env = PongDiscretizer(env, players=1)
+    config_env = retroActionWrapper(env, agent_num=1)
+    config_env = retroOneWrapper(config_env) 
+    config_env = MaxAndSkipEnv(config_env, skip=config.skip_frame)
+    config_env = PreproWrapper(config_env, prepro=greyscale, shape=(80, 80, 1),
+                         overwrite_render=config.overwrite_render)
+    ts = TSampling(10, config, config_env)
     # wt = WellTrainedAgent(config_env, epsilon=0.01)
 
     # # test_env = PongDiscretizer(env, players=2)
@@ -394,50 +395,52 @@ if __name__ == "__main__":
 
     # rd = randomAgent()
 
-    # ob = test_env.reset()
-    # for i in range(3):
-    #     ob = test_env.reset()
-    #     print("game:{}".format(i))
-    #     rollout = 0
+    ob = test_env.reset()
+    for i in range(10):
+        ob = test_env.reset()
+        print("game:{}".format(i))
+        rollout = 0
         
-    #     while True:
-    #         a2 = rd.act()
-    #         a1 = wt.act(ob)
-    #         if rollout == 0:
-    #             action = 6*a1+a2
-    #             ob, r, done, info = test_env.step(action)
-    #         elif rollout < 0:
-    #             print("right: serve ball")
-    #             if a1 == 1 or a1 == 4 or a1 == 5:
-    #                 action = 6 *a1 + a2
-    #             else:
-    #                 action = 6 * 1 + a2
-    #             ob, r, done, info = test_env.step(action)
-    #         elif rollout > 0:
-    #             print("left: serve ball")
-    #             action = 6*a1 + 1
-    #             ob, r, done, info = test_env.step(action)
+        while True:
+            a1 = ts.action_human(ob)
+            ob = np.fliplr(ob)
+            a2 = ts.action_ts(ob)
+            if rollout == 0:
+                action = 6*a1+a2
+                ob, r, done, info = test_env.step(action)
+            elif rollout < 0:
+                print("right: serve ball")
+                if a1 == 1 or a1 == 4 or a1 == 5:
+                    action = 6 *a1 + a2
+                else:
+                    action = 6 * 1 + a2
+                ob, r, done, info = test_env.step(action)
+            elif rollout > 0:
+                print("left: serve ball")
+                action = 6*a1 + 1
+                ob, r, done, info = test_env.step(action)
             
-    #         if r[0] != 0:
-    #             print("reward {}".format(r))
-    #         test_env.render()
+            if r[0] != 0:
+                print("reward {}".format(r))
+            ts.updateBelief(r[1], done)
+            test_env.render()
 
-    #         if done: break
-    #         if r[0] > 0:
-    #             rollout = -6
-    #         elif r[1] > 0:
-    #             rollout = 6
-    #         else:
-    #             rollout -= np.sign(rollout)
+            if done: break
+            if r[0] > 0:
+                rollout = -6
+            elif r[1] > 0:
+                rollout = 6
+            else:
+                rollout -= np.sign(rollout)
             
-    #         if done:
-    #             test_env.reset()
-    #             break
-    #         time.sleep(0.1)
-    #         test_env.render()
-    # test_env.close()
-    kb = HumanAgent()
-    kb.main()
+            if done:
+                test_env.reset()
+                break
+            time.sleep(0.1)
+            test_env.render()
+    test_env.close()
+    # kb = HumanAgent()
+    # kb.main()
 
 
 
