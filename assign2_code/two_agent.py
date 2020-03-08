@@ -248,7 +248,7 @@ class HumanAgent(object):
                             overwrite_render=config.overwrite_render)
         # self.sd = StableBaselineAgent(config_env, epsilon=0.00001)
 
-        self.ts = TSampling(10, config)
+        self.ts = TSampling(10, config, config_env)
         # self.wt = WellTrainedAgent(config_env, epsilon=0.01)
         self.env = test_env
         self.env.render()
@@ -290,8 +290,12 @@ class HumanAgent(object):
                 action = 6*a1+self.human_agent_action
                 ob, r, done, info = self.env.step(action)
             elif self.rollout < 0:
+                if a1 == 1 or a1 == 4 or a1 == 5:
+                    action = 6 *a1 + self.human_agent_action
+                else:
+                    action = 6 * 1 + self.human_agent_action
                 print("right: serve ball")
-                action = 6 * 1 + self.human_agent_action
+                # action = 6 * 1 + self.human_agent_action
                 ob, r, done, info = self.env.step(action)
             elif self.rollout > 0:
                 print("left: serve ball")
