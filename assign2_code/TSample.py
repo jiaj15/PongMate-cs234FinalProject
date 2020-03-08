@@ -76,6 +76,7 @@ class TSampling(object):
 
         self.win = 0
         self.lose = 0
+        self.step = 0
 
     def make_env(self):
 
@@ -92,6 +93,7 @@ class TSampling(object):
 
     def updateBelief(self, reward, done=False):
         """ every step update the belief about the human player """
+        self.step += 1
 
         if reward == -1:
 
@@ -122,7 +124,7 @@ class TSampling(object):
             self.logger.info("use model in level {}".format(self.levels[self.level]))
 
             if done:
-                self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, step))
+                self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, self.step))
                 for i in range(self.bandit_num):
                     self.entropy[i] = self.kl_divergence(i)
                 guess = np.argmin(self.entropy)
@@ -138,6 +140,7 @@ class TSampling(object):
                 self.probs[:, :] = self.init_probs_backup[:, :]
                 self.win = 0
                 self.lose = 0
+                self.step = 0
 
 
     def cleanMemory(self):
