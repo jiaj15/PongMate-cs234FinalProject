@@ -8,6 +8,8 @@ import retro
 from utils.wrappers import *
 from utils.preprocess import greyscale
 from utils.replay_buffer import ReplayBuffer
+from TSample import TSampling
+from configs.ts_config import config
 
 try:
     from stable_baselines.deepq import DQN, wrap_atari_dqn, CnnPolicy
@@ -238,14 +240,16 @@ class HumanAgent(object):
         test_env = MaxAndSkipEnvForTest(test_env)
 
         config_env = PongDiscretizer(env, players=1)
-        self.sd = StableBaselineAgent(config_env, epsilon=0.00001)
+        #self.sd = StableBaselineAgent(config_env, epsilon=0.00001)
         config_env = retroActionWrapper(env, agent_num=1)
         config_env = retroOneWrapper(config_env) 
         config_env = MaxAndSkipEnv(config_env, skip=config.skip_frame)
         config_env = PreproWrapper(config_env, prepro=greyscale, shape=(80, 80, 1),
                             overwrite_render=config.overwrite_render)
         # self.sd = StableBaselineAgent(config_env, epsilon=0.00001)
-        self.wt = WellTrainedAgent(config_env, epsilon=0.01)
+
+        self.ts = TSampling(10, config)
+        # self.wt = WellTrainedAgent(config_env, epsilon=0.01)
         self.env = test_env
         self.env.render()
         self.env.unwrapped.viewer.window.on_key_press = self.key_press
@@ -280,7 +284,8 @@ class HumanAgent(object):
         self.rollout = 0
         while True:
             
-            a1 = self.wt.act(ob)
+            #a1 = self.wt.act(ob)
+            a1 = self.ts.action(ob)
             if self.rollout == 0:
                 action = 6*a1+self.human_agent_action
                 ob, r, done, info = self.env.step(action)
@@ -297,15 +302,16 @@ class HumanAgent(object):
                 print("reward {}".format(r))
             total_reward += r[0]
             self.env.render()
+            self.ts.updateBelief(r[1], done)
 
             if done: break
             if r[0] > 0:
                 self.rollout = -10
             elif r[1] > 0:
-
                 self.rollout = 10
             else:
                 self.rollout -= np.sign(self.rollout)
+            
             
 
             while self.human_sets_pause:
