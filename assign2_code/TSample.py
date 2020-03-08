@@ -93,10 +93,14 @@ class TSampling(object):
         self.logger.info("AI use model in level {}".format(self.levels[self.level]))
         return self.model.predict(state)[0]
 
-    def action_human(self, state, human_level):
-        self.logger.info("AI use model in level {}".format(human_level))
-        self.model.load(human_level)
-        return self.model.predict(state)[0]
+    def action_human(self, state, human_level_episilon):
+        self.logger.info("AI use model in level {}".format(human_level_episilon))
+        self.model.load(0, well_trained=True)
+        best_action = self.model.predict(state)[0]
+        if np.random.random() < human_level_episilon:
+            return np.random.choice(range(6))
+        else :
+            return best_action
 
 
     def updateBelief(self, reward, done=False):
