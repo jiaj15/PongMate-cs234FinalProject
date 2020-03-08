@@ -49,22 +49,14 @@ class TSampling(object):
         #         self.models.append(model)
         #         self.logger.info("loading model in level {}".format(bandit))
 
-
-
         #self.model = NatureQN(self.env, config)
-
 
         self.levels = []
         for bandit in range(bandit_num_upper):
             if os.path.exists(self.config.checkpoint_path + str(bandit)):
                 self.levels.append(bandit)
 
-
-        # self.env = MaxAndSkipEnvForTest(self.env)
-
-
         # all variables need for Thompson Sampling
-        # self.bandit_num = len(self.models)
         self.bandit_num = len(self.levels)
         self.rnd = np.random.RandomState()
         self.probs = np.ones((self.bandit_num, 2))
@@ -153,9 +145,7 @@ class TSampling(object):
                 self.level = level
                 with self.g1.as_default():
                     self.model.load(self.levels[self.level])
-            # self.model.load(self.levels[self.level])
-            # self.logger.info("AI use model in level {}".format(self.levels[self.level]))
-            #self.logger.info("human use model in level {}".format(human_level_episilon))
+
 
             if done:
                 # self.logger.info(
@@ -196,16 +186,11 @@ class TSampling(object):
         self.lose = 0
 
     def writeDate(self, file_name):
-        # file_csv = codecs.open(file_name, 'w+', 'utf-8')
-        # writer = csv.writer(file_csv, delimiter=' ', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
-        # writer.writerow(self.results)
-        # writer.writerow([self.lose, self.win, self.step, self.e])
-        # with open("results.txt", 'a+') as f:
         f = open(file_name, 'a+')
         f.write(str(self.results)[1:-1] + "\n")
         f.write(str(self.rewards)[1:-1] + "\n")
         f.write(str(self.lose) + ", " + str(self.win) + ", " + str(self.step) + ", " + str(self.e) + "\n")
-        #f.close()
+
 
 
 
@@ -332,12 +317,10 @@ if __name__ == '__main__':
     done = False
     for i in range(3):
         state = env.reset()
-        print("!!!")
         done = False
         while not done:
             a1 = test.action_ts(state)
             a2 = test.action_human(state, 0.9)
-            #print(a1, a2)
             new_state, reward, done, info = env.step(a1)
             test.updateBelief(reward, done)
             state = new_state
