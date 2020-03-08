@@ -193,10 +193,16 @@ class TSampling(object):
         self.lose = 0
 
     def writeDate(self, file_name):
-        file_csv = codecs.open(file_name, 'w+', 'utf-8')
-        writer = csv.writer(file_csv, delimiter=' ', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(self.results)
-        writer.writerow([self.lose, self.win, self.step, self.e])
+        # file_csv = codecs.open(file_name, 'w+', 'utf-8')
+        # writer = csv.writer(file_csv, delimiter=' ', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
+        # writer.writerow(self.results)
+        # writer.writerow([self.lose, self.win, self.step, self.e])
+        # with open("results.txt", 'a+') as f:
+        f = open(file_name, 'a+')
+        f.write(str(self.results)[1:-1] + "\n")
+        f.write(str(self.lose) + ", " + str(self.win) + ", " + str(self.step) + ", " + str(self.e) + "\n")
+        #f.close()
+
 
 
 
@@ -320,13 +326,19 @@ if __name__ == '__main__':
     env = MaxAndSkipEnvForTest(env)
     state = env.reset()
     done = False
-    while not done:
-        a1 = test.action_ts(state)
-        a2 = test.action_human(state, 0.9)
-        print(a1, a2)
-        new_state, reward, done, info = env.step(a1)
-        test.updateBelief(reward, done)
-        state = new_state
+    for i in range(3):
+        state = env.reset()
+        print("!!!")
+        done = False
+        while not done:
+            a1 = test.action_ts(state)
+            a2 = test.action_human(state, 0.9)
+            #print(a1, a2)
+            new_state, reward, done, info = env.step(a1)
+            test.updateBelief(reward, done)
+            state = new_state
+
+
 
 
 
