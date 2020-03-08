@@ -92,8 +92,8 @@ class TSampling(object):
         """ when get a state, return the action according to the model it chooses"""
         return self.model.predict(state)[0]
 
-    def action_human(self, state):
-        self.model.load(self.HUMANLEVEL)
+    def action_human(self, state, human_level):
+        self.model.load(human_level)
         return self.model.predict(state)[0]
 
 
