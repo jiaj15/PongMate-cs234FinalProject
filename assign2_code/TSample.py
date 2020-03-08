@@ -49,7 +49,14 @@ class TSampling(object):
 
 
         #self.model = NatureQN(self.env, config)
-        self.model = NatureQN(env, config)
+        self.g1 = tf.Graph()
+        self.g2 = tf.Graph()
+
+        with self.g1.as_default():
+            self.model = NatureQN(env, config)
+        with self.g2.as_default():
+            self.human_model = NatureQN(env, config)
+            self.human_model.load(0, well_trained=True)
 
         self.levels = []
         for bandit in range(bandit_num_upper):
@@ -90,13 +97,15 @@ class TSampling(object):
 
     def action_ts(self, state):
         """ when get a state, return the action according to the model it chooses"""
+        with self.g1.as_default():
+            action = self.model.predict(state)[0]
         self.logger.info("AI use model in level {}".format(self.levels[self.level]))
-        return self.model.predict(state)[0]
+        return action
 
     def action_human(self, state, human_level_episilon):
-        self.logger.info("AI use model in level {}".format(human_level_episilon))
-        self.model.load(0, well_trained=True)
-        best_action = self.model.predict(state)[0]
+        self.logger.info("human use model in level {}".format(human_level_episilon))
+        with self.g2.as_default():
+            best_action = self.human_model.predict(state)[0]
         if np.random.random() < human_level_episilon:
             return np.random.choice(range(6))
         else :
@@ -130,8 +139,8 @@ class TSampling(object):
 
             if level != self.level:
                 self.level = level
-                # self.model.load(self.levels[self.level])
-            self.model.load(self.levels[self.level])
+                self.model.load(self.levels[self.level])
+            # self.model.load(self.levels[self.level])
 
             if done:
                 self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, self.step))
