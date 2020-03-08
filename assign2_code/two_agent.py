@@ -396,13 +396,14 @@ if __name__ == "__main__":
     # rd = randomAgent()
 
     ob = test_env.reset()
+    for level in levels:
     for i in range(10):
         ob = test_env.reset()
         print("game:{}".format(i))
         rollout = 0
         
         while True:
-            a1 = ts.action_human(ob)
+            a1 = ts.action_human(ob,5)
             ob = np.fliplr(ob)
             a2 = ts.action_ts(ob)
             if rollout == 0:
