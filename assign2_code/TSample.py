@@ -24,6 +24,7 @@ class TSampling(object):
         # some parameters to tune
         self.GAP = 1
         self.EXPECTATION = 0.5
+        self.OTHERUPDATE = 0.5
 
         # used to control when to stop the game
         self.win = 0
@@ -54,6 +55,7 @@ class TSampling(object):
 
         self.env = MaxAndSkipEnvForTest(self.env)
 
+
         # all variables need for Thompson Sampling
         # self.bandit_num = len(self.models)
         self.bandit_num = len(self.levels)
@@ -66,6 +68,12 @@ class TSampling(object):
 
         self.logger.info("loading done, we have {} levels of model".format(self.bandit_num))
 
+        self.level = self.bandit_num // 2
+        self.model.load(self.levels[self.level])
+
+        self.win = 0
+        self.lose = 0
+
     def make_env(self):
 
         # get the env
@@ -74,6 +82,74 @@ class TSampling(object):
         self.env = MaxAndSkipEnv(self.env, skip=config.skip_frame)
         self.env = PreproWrapper(self.env, prepro=greyscale, shape=(80, 80, 1),
                                  overwrite_render=config.overwrite_render)
+
+    def action(self, state):
+        """ when get a state, return the action according to the model it chooses"""
+        return self.model.predict(state)[0]
+
+    def updateBelief(self, reward, done=False):
+        """ every step update the belief about the human player """
+
+        if reward == -1:
+
+            self.lose += 1
+            self.probs[self.level][0] += 1
+            self.probs[self.level][1] += 1
+            for j in range(0, self.level):
+                self.probs[j][0] += self.OTHERUPDATE
+
+        elif reward == 1:
+
+            self.win += 1
+            self.probs[self.level][0] += 1
+            self.probs[self.level][1] += 1
+            for j in range(self.level + 1, self.bandit_num):
+                self.probs[j][1] += self.OTHERUPDATE
+        else:
+            pass
+
+        if reward == -1 or reward == 1:
+            for i in range(self.bandit_num):
+                self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - self.EXPECTATION)
+            level = np.argmin(self.samples)
+
+            if level != self.level:
+                self.level = level
+                self.model.load(self.levels[self.level])
+            self.logger.info("use model in level {}".format(self.levels[self.level]))
+
+            if done:
+                self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, step))
+                for i in range(self.bandit_num):
+                    self.entropy[i] = self.kl_divergence(i)
+                guess = np.argmin(self.entropy)
+                self.init_probs_backup[guess][0] += 1
+                self.init_probs_backup[guess][1] += 1
+                if self.lose > self.win + self.GAP and guess + 1 < self.bandit_num:
+                    self.init_probs_backup[guess + 1][0] += 1
+                    self.init_probs_backup[guess + 1][1] += 1
+                if self.win > self.lose + self.GAP and guess - 1 >= 0:
+                    self.init_probs_backup[guess - 1][0] += 1
+                    self.init_probs_backup[guess - 1][1] += 1
+
+                self.probs[:, :] = self.init_probs_backup[:, :]
+                self.win = 0
+                self.lose = 0
+
+
+    def cleanMemory(self):
+        """ call this method when we change to a new human player """
+
+        self.probs = np.ones((self.bandit_num, 2))
+        self.init_probs_backup = np.ones((self.bandit_num, 2))
+
+        self.level = self.bandit_num // 2
+        self.model.load(self.levels[self.level])
+
+        self.win = 0
+        self.lose = 0
+
+
 
     def run(self, game_num):
 
