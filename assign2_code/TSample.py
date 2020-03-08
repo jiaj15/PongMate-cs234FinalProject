@@ -14,6 +14,9 @@ from q1_schedule import LinearExploration, LinearSchedule
 from q3_nature import NatureQN
 from configs.ts_config import config
 
+import csv
+import codecs
+
 
 
 
@@ -32,7 +35,7 @@ class TSampling(object):
         self.lose = 0
 
         self.config = config
-        self.logger = get_logger(self.config.log_path)
+        # self.logger = get_logger(self.config.log_path)
 
         # make the env
         # self.make_env()
@@ -70,7 +73,7 @@ class TSampling(object):
         self.entropy = np.zeros(self.bandit_num)
         self.standord = sys.beta(3, 3)
 
-        self.logger.info("loading done, we have {} levels of model".format(self.bandit_num))
+        # self.logger.info("loading done, we have {} levels of model".format(self.bandit_num))
 
         self.level = self.bandit_num // 2
 
@@ -90,6 +93,7 @@ class TSampling(object):
         self.lose = 0
         self.step = 0
         self.e = 0.9
+        self.results = []
 
     def make_env(self):
 
@@ -138,6 +142,7 @@ class TSampling(object):
             pass
 
         if reward == -1 or reward == 1:
+            self.results.append(self.levels[self.level])
             for i in range(self.bandit_num):
                 self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - self.EXPECTATION)
             level = np.argmin(self.samples)
@@ -147,13 +152,13 @@ class TSampling(object):
                 with self.g1.as_default():
                     self.model.load(self.levels[self.level])
             # self.model.load(self.levels[self.level])
-            self.logger.info("AI use model in level {}".format(self.levels[self.level]))
+            # self.logger.info("AI use model in level {}".format(self.levels[self.level]))
             #self.logger.info("human use model in level {}".format(human_level_episilon))
 
             if done:
-                self.logger.info(
-                    "One game over, score is({},{}, whole steps are {}, human level is {})".format(self.lose, self.win,
-                                                                                                   self.step, self.e))
+                # self.logger.info(
+                #     "One game over, score is({},{}, whole steps are {}, human level is {})".format(self.lose, self.win,
+                #                                                                                    self.step, self.e))
                 for i in range(self.bandit_num):
                     self.entropy[i] = self.kl_divergence(i)
                 guess = np.argmin(self.entropy)
@@ -170,6 +175,8 @@ class TSampling(object):
                 self.win = 0
                 self.lose = 0
                 self.step = 0
+                self.writeDate("results.txt")
+                self.results = []
 
 
     def cleanMemory(self):
@@ -183,6 +190,12 @@ class TSampling(object):
 
         self.win = 0
         self.lose = 0
+
+    def writeDate(self, file_name):
+        file_csv = codecs.open(file_name, 'w+', 'utf-8')
+        writer = csv.writer(file_csv, delimiter=' ', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(self.results)
+        writer.writerow([self.lose, self.win, self.step, self.e])
 
 
 
@@ -226,6 +239,7 @@ class TSampling(object):
                     pass
 
                 if reward == -1 or reward == 1:
+                    self.results.append(self.levels[self.level])
                     for i in range(self.bandit_num):
                         self.samples[i] = np.abs(self.rnd.beta(self.probs[i][0], self.probs[i][1]) - self.EXPECTATION)
                     level = np.argmin(self.samples)
@@ -268,6 +282,10 @@ class TSampling(object):
         return sum(rel_entr(p, q))
 
 
+
+
+
+
 if __name__ == '__main__':
     # test = TSampling(8, config)
     # test.run(10)
@@ -300,11 +318,13 @@ if __name__ == '__main__':
     test = TSampling(4, config, env)
     env = MaxAndSkipEnvForTest(env)
     state = env.reset()
-    while True:
+    done = False
+    while not done:
         a1 = test.action_ts(state)
-        a2 = test.action_human(state,0.9)
+        a2 = test.action_human(state, 0.9)
         print(a1, a2)
         new_state, reward, done, info = env.step(a1)
+        test.updateBelief(reward, done)
         state = new_state
 
 
