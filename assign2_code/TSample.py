@@ -90,10 +90,12 @@ class TSampling(object):
 
     def action_ts(self, state):
         """ when get a state, return the action according to the model it chooses"""
+        self.logger.info("AI use model in level {}".format(self.levels[self.level]))
         return self.model.predict(state)[0]
 
-    def action_human(self, state):
-        self.model.load(self.HUMANLEVEL)
+    def action_human(self, state, human_level):
+        self.logger.info("AI use model in level {}".format(human_level))
+        self.model.load(human_level)
         return self.model.predict(state)[0]
 
 
@@ -128,7 +130,6 @@ class TSampling(object):
                 self.level = level
                 # self.model.load(self.levels[self.level])
             self.model.load(self.levels[self.level])
-            self.logger.info("use model in level {}".format(self.levels[self.level]))
 
             if done:
                 self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, self.step))
