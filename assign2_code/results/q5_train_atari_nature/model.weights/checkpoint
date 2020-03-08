@@ -1,2 +1,6 @@
 model_checkpoint_path: "."
+all_model_checkpoint_paths: "../checkpoints/6"
+all_model_checkpoint_paths: "../checkpoints/8"
+all_model_checkpoint_paths: "../checkpoints/7"
+all_model_checkpoint_paths: "../checkpoints/9"
 all_model_checkpoint_paths: "."

@@ -16,21 +16,31 @@ class MaxAndSkipEnv(gym.Wrapper):
     Wrapper from Berkeley's Assignment
     Takes a max pool over the last n states
     """
-    def __init__(self, env=None, skip=4):
+    def __init__(self, env=None, skip=4, agent_num=1):
         """Return only every `skip`-th frame"""
         super(MaxAndSkipEnv, self).__init__(env)
         # most recent raw observations (for max pooling across time steps)
         self._obs_buffer = deque(maxlen=2)
         self._skip       = skip
+        self.agent_num = agent_num
 
     def step(self, action):
-        total_info = {"delta_score": 0.0}
-        total_reward = 0.0
+        if self.agent_num == 1:
+            total_reward = 0.0
+        else:
+            total_reward = [0.0, 0.0]
+
+        total_info = {"delta_score": total_reward}
         done = None
         for _ in range(self._skip):
             obs, reward, done, info = self.env.step(action)
             self._obs_buffer.append(obs)
-            total_reward += reward          
+            if self.agent_num == 1:
+                total_reward += reward 
+            else:
+                total_reward[0] += reward[0] 
+                total_reward[1] += reward[1] 
+
         
             if done:
                 break
