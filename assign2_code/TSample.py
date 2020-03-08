@@ -25,6 +25,7 @@ class TSampling(object):
         self.GAP = 1
         self.EXPECTATION = 0.5
         self.OTHERUPDATE = 0.5
+        self.HUMANLEVEL = 7
 
         # used to control when to stop the game
         self.win = 0
@@ -87,9 +88,14 @@ class TSampling(object):
         self.env = PreproWrapper(self.env, prepro=greyscale, shape=(80, 80, 1),
                                  overwrite_render=config.overwrite_render)
 
-    def action(self, state):
+    def action_ts(self, state):
         """ when get a state, return the action according to the model it chooses"""
         return self.model.predict(state)[0]
+
+    def action_human(self, state):
+        self.model.load(self.HUMANLEVEL)
+        return self.model.predict(state)[0]
+
 
     def updateBelief(self, reward, done=False):
         """ every step update the belief about the human player """
@@ -120,7 +126,8 @@ class TSampling(object):
 
             if level != self.level:
                 self.level = level
-                self.model.load(self.levels[self.level])
+                # self.model.load(self.levels[self.level])
+            self.model.load(self.levels[self.level])
             self.logger.info("use model in level {}".format(self.levels[self.level]))
 
             if done:
