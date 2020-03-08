@@ -52,7 +52,7 @@ class TSampling(object):
         self.model = NatureQN(env, config)
 
         self.levels = []
-        for bandit in range(1, bandit_num_upper):
+        for bandit in range(bandit_num_upper):
             if os.path.exists(self.config.checkpoint_path + str(bandit)):
                 self.levels.append(bandit)
 
@@ -162,6 +162,7 @@ class TSampling(object):
 
         self.win = 0
         self.lose = 0
+
 
 
 
