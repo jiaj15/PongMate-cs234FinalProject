@@ -18,8 +18,6 @@ import csv
 import codecs
 
 
-
-
 class TSampling(object):
 
     def __init__(self, bandit_num_upper, config, env):
@@ -35,26 +33,17 @@ class TSampling(object):
         self.lose = 0
 
         self.config = config
-        # self.logger = get_logger(self.config.log_path)
-
-        # make the env
-        # self.make_env()
-
-        # self.models = []
-        # for bandit in range(bandit_num_upper):
-        #     if os.path.exists(self.config.checkpoint_path + str(bandit)):
-        #         model = NatureQN(self.env, config)
-        #         model.load(bandit)
-        #         print("---------------------", bandit)
-        #         self.models.append(model)
-        #         self.logger.info("loading model in level {}".format(bandit))
-
-        #self.model = NatureQN(self.env, config)
 
         self.levels = []
+        self.models = []
         for bandit in range(bandit_num_upper):
             if os.path.exists(self.config.checkpoint_path + str(bandit)):
                 self.levels.append(bandit)
+                g = tf.Graph()
+                with g.as_default():
+                    model = NatureQN(env, config)
+                    model.load(bandit)
+                    self.models.append(model)
 
         # all variables need for Thompson Sampling
         self.bandit_num = len(self.levels)
@@ -69,17 +58,11 @@ class TSampling(object):
 
         self.level = self.bandit_num // 2
 
-        self.g1 = tf.Graph()
         self.g2 = tf.Graph()
 
-        with self.g1.as_default():
-            self.model = NatureQN(env, config)
-            self.model.load(self.levels[self.level])
         with self.g2.as_default():
             self.human_model = NatureQN(env, config)
             self.human_model.load(0, well_trained=True)
-
-
 
         self.win = 0
         self.lose = 0
@@ -99,20 +82,19 @@ class TSampling(object):
 
     def action_ts(self, state):
         """ when get a state, return the action according to the model it chooses"""
-        with self.g1.as_default():
-            action = self.model.predict(state)[0]
+        # with self.g1.as_default():
+        #     action = self.model.predict(state)[0]
+        action = self.models[self.level].predict(state)[0]
         return action
 
     def action_human(self, state, human_level_episilon):
 
         self.e = human_level_episilon
-        with self.g2.as_default():
-            best_action = self.human_model.predict(state)[0]
+        best_action = self.human_model.predict(state)[0]
         if np.random.random() < human_level_episilon:
             return np.random.choice(range(6))
-        else :
+        else:
             return best_action
-
 
     def updateBelief(self, reward, done=False):
         """ every step update the belief about the human player """
@@ -143,14 +125,8 @@ class TSampling(object):
 
             if level != self.level:
                 self.level = level
-                with self.g1.as_default():
-                    self.model.load(self.levels[self.level])
-
 
             if done:
-                # self.logger.info(
-                #     "One game over, score is({},{}, whole steps are {}, human level is {})".format(self.lose, self.win,
-                #                                                                                    self.step, self.e))
                 for i in range(self.bandit_num):
                     self.entropy[i] = self.kl_divergence(i)
                 guess = np.argmin(self.entropy)
@@ -172,7 +148,6 @@ class TSampling(object):
                 self.results = []
                 self.rewards = []
 
-
     def cleanMemory(self):
         """ call this method when we change to a new human player """
 
@@ -191,15 +166,10 @@ class TSampling(object):
         f.write(str(self.rewards)[1:-1] + "\n")
         f.write(str(self.lose) + ", " + str(self.win) + ", " + str(self.step) + ", " + str(self.e) + "\n")
 
-
-
-
-
-
     def run(self, game_num):
 
         t = 0
-        self.level = self.bandit_num//2
+        self.level = self.bandit_num // 2
         self.model.load(self.levels[self.level])
 
         while t < game_num:
@@ -208,13 +178,13 @@ class TSampling(object):
             self.win = 0
             self.lose = 0
             step = 0
-            self.probs[:,:] = self.init_probs_backup[:,:]
-            print(self.probs,self.init_probs_backup)
+            self.probs[:, :] = self.init_probs_backup[:, :]
+            print(self.probs, self.init_probs_backup)
 
             while True:
 
                 step += 1
-               # print(self.init_probs_backup)
+                # print(self.init_probs_backup)
 
                 action = self.model.predict(state)[0]
                 new_state, reward, done, info = self.env.step(action)
@@ -248,7 +218,8 @@ class TSampling(object):
                 state = new_state
                 # self.env.render()
                 if done:
-                    self.logger.info("One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, step))
+                    self.logger.info(
+                        "One game over, score is({},{}, whole steps are {})".format(self.lose, self.win, step))
                     for i in range(self.bandit_num):
                         self.entropy[i] = self.kl_divergence(i)
                     guess = np.argmin(self.entropy)
@@ -276,10 +247,6 @@ class TSampling(object):
         q = self.standord.pdf(x)
 
         return sum(rel_entr(p, q))
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -324,8 +291,3 @@ if __name__ == '__main__':
             new_state, reward, done, info = env.step(a1)
             test.updateBelief(reward, done)
             state = new_state
-
-
-
-
-
