@@ -465,7 +465,10 @@ if __name__ == "__main__":
                     ob, r, done, info = test_env.step(action)
                 elif rollout > 0:
                     print("left: serve ball")
-                    action = 6*a1 + 1
+                    if a2 == 1 or a2 == 4 or a2 == 5:
+                        action = 6 * a1 + a2
+                    else:
+                        action = 6*a1 + 1
                     ob, r, done, info = test_env.step(action)
 
                 if r[0] != 0:
