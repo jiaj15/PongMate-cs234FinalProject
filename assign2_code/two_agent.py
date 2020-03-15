@@ -326,7 +326,7 @@ class HumanAgent(object):
                 print("reward {}".format(r))
             total_reward += r[0]
             self.env.render()
-            self.ts.updateBelief(r[1], done)
+            self.ts.updateBelief(r[0], done)
 
             if done:
                 break
