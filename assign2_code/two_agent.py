@@ -237,14 +237,17 @@ class HumanAgent(object):
         #test_env = retroActionWrapper(env, agent_num=2)
         print(test_env.action_space.n)
         test_env = retroTwoWrapper(test_env)
-        test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
+        #test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
         test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
                                  overwrite_render=config.overwrite_render)
         self._frame_buffer = deque(maxlen=4)
-        for i in range(2):
-            self._frame_buffer.append(np.zeros((80, 80, 1)))
+        self._obs_buffer = deque(maxlen=2)
+        for i in range(4):
+            self._frame_buffer.append(np.zeros((80,80,1)))
+        # for i in range(2):
+        #     self._frame_buffer.append(np.zeros((80, 80, 1)))
 
-        test_env = MaxAndSkipEnvForTest(test_env)
+        #test_env = MaxAndSkipEnvForTest(test_env)
 
         config_env = PongDiscretizer(env, players=1)
         #self.sd = StableBaselineAgent(config_env, epsilon=0.00001)
@@ -262,38 +265,42 @@ class HumanAgent(object):
         self.env.unwrapped.viewer.window.on_key_press = self.key_press
         self.env.unwrapped.viewer.window.on_key_release = self.key_release
 
+
     def key_press(self, key, mod):
         if key == 32:
             self.human_sets_pause = not self.human_sets_pause
         a = int(key - ord('0'))
-        if a <= 0 or a >= 10:
+        if a <= 0 or a >= 6:
             return
         self.human_agent_action = a
-        if self.human_agent_action >= 7:
-            self.human_agent_action += 29
+        # if self.human_agent_action >= 7:
+        #     self.human_agent_action += 29
 
     def key_release(self, key, mod):
         a = int(key - ord('0'))
-        if a <= 0 or a >= 10:
+        if a <= 0 or a >= 6:
             return
         # if self.human_agent_action >= 7:
         #     self.human_agent_action += 29
         if self.human_agent_action == a:
             self.human_agent_action = 0
-        if self.human_agent_action - 29 == a:
-            self.human_agent_action = 0
+        # if self.human_agent_action - 29 == a:
+        #     self.human_agent_action = 0
 
     def main(self):
         ob = self.env.reset()
+        self._frame_buffer.append(ob)
+        wrapped_ob = np.concatenate(self._frame_buffer, 2)  
         total_reward = 0
         self.rollout = 0
+        i = 0
+        skip_frames = 4
         while True:
-
             #a1 = self.wt.act(ob)
-            a1 = self.ts.action(ob)
+            if i % skip_frames == 0:
+                a1 = self.ts.action_ts(wrapped_ob)
             if self.rollout == 0:
-                action = 6*a1+self.human_agent_action
-                ob, r, done, info = self.env.step(action)
+                action = 6*a1+self.human_agent_action                
             elif self.rollout < 0:
                 if a1 == 1 or a1 == 4 or a1 == 5:
                     action = 6 * a1 + self.human_agent_action
@@ -301,11 +308,19 @@ class HumanAgent(object):
                     action = 6 * 1 + self.human_agent_action
                 print("right: serve ball")
                 # action = 6 * 1 + self.human_agent_action
-                ob, r, done, info = self.env.step(action)
+                #ob, r, done, info = self.env.step(action)
             elif self.rollout > 0:
                 print("left: serve ball")
                 action = 6*a1 + np.random.choice([1, 4, 5], 1)[0]
-                ob, r, done, info = self.env.step(action)
+                #ob, r, done, info = self.env.step(action)
+            ob, r, done, info = self.env.step(action)
+
+            self._obs_buffer.append(ob)
+            if i % skip_frames == 1:
+                max_frame = np.max(np.stack(self._obs_buffer), axis=0)
+                self._frame_buffer.append(max_frame)
+            wrapped_ob = np.concatenate(self._frame_buffer, 2)  
+
 
             if r[0] != 0:
                 print("reward {}".format(r))
@@ -325,7 +340,8 @@ class HumanAgent(object):
             while self.human_sets_pause:
                 self.env.render()
                 time.sleep(0.1)
-            time.sleep(0.1)
+            time.sleep(0.05)
+            i += 1
 
 
 # def make_config_env():
@@ -355,144 +371,100 @@ class HumanAgent(object):
 
 
 if __name__ == "__main__":
-    # env = gym.make('Pong-v0')
+    # # env = gym.make('Pong-v0')
 
-    # # print(retro.data.list_games())
-    env = retro.make(game='Pong-Atari2600', players=2)
+    # # # print(retro.data.list_games())
+    # env = retro.make(game='Pong-Atari2600', players=2)
 
-    test_env = PongDiscretizer(env, players=2)
-    #test_env = retroActionWrapper(env, agent_num=2)
-    print(test_env.action_space.n)
-    test_env = retroTwoWrapper(test_env)
-    test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
-    test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
-                             overwrite_render=config.overwrite_render)
-    test_env = MaxAndSkipEnvForTest(test_env)
+    # test_env = PongDiscretizer(env, players=2)
+    # #test_env = retroActionWrapper(env, agent_num=2)
+    # print(test_env.action_space.n)
+    # test_env = retroTwoWrapper(test_env)
+    # test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
+    # test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
+    #                          overwrite_render=config.overwrite_render)
+    # test_env = MaxAndSkipEnvForTest(test_env)
 
-    config_env = PongDiscretizer(env, players=1)
-    config_env = retroActionWrapper(env, agent_num=1)
-    config_env = retroOneWrapper(config_env)
-    config_env = MaxAndSkipEnv(config_env, skip=config.skip_frame)
-    config_env = PreproWrapper(config_env, prepro=greyscale, shape=(80, 80, 1),
-                               overwrite_render=config.overwrite_render)
-    ts = TSampling(10, config, config_env)
-    # wt = WellTrainedAgent(config_env, epsilon=0.01)
+    # config_env = PongDiscretizer(env, players=1)
+    # config_env = retroActionWrapper(env, agent_num=1)
+    # config_env = retroOneWrapper(config_env)
+    # config_env = MaxAndSkipEnv(config_env, skip=config.skip_frame)
+    # config_env = PreproWrapper(config_env, prepro=greyscale, shape=(80, 80, 1),
+    #                            overwrite_render=config.overwrite_render)
+    # ts = TSampling(10, config, config_env)
+    # # wt = WellTrainedAgent(config_env, epsilon=0.01)
 
-    # # test_env = PongDiscretizer(env, players=2)
-    # # #test_env = retroActionWrapper(env, agent_num=2)
-    # # print(test_env.action_space.n)
-    # # test_env = retroTwoWrapper(test_env)
-    # # test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
-    # # test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
-    # #                     overwrite_render=config.overwrite_render)
-    # # test_env = MaxAndSkipEnvForTest(test_env)
-    # # print('retro.Actions.DISCRETE action_space', env.action_space)
-    # # for i in range(env.action_space.n):
+    # # # test_env = PongDiscretizer(env, players=2)
+    # # # #test_env = retroActionWrapper(env, agent_num=2)
+    # # # print(test_env.action_space.n)
+    # # # test_env = retroTwoWrapper(test_env)
+    # # # test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
+    # # # test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
+    # # #                     overwrite_render=config.overwrite_render)
+    # # # test_env = MaxAndSkipEnvForTest(test_env)
+    # # # print('retro.Actions.DISCRETE action_space', env.action_space)
+    # # # for i in range(env.action_space.n):
 
-    # #     print((i,env.get_action_meaning(i)))
+    # # #     print((i,env.get_action_meaning(i)))
 
-    # rd = randomAgent()
+    # # rd = randomAgent()
 
-    ob = test_env.reset()
+    # ob = test_env.reset()
 
-    eps = list(np.linspace(0.9, 0.0, num=10))
-    print(eps)
-    for ep in eps:
-        for i in range(5):
-            ob = test_env.reset()
-            print("game:{}".format(i))
-            rollout = 0
+    # eps = list(np.linspace(0.9, 0.0, num=10))
+    # print(eps)
+    # for ep in eps:
+    #     for i in range(5):
+    #         ob = test_env.reset()
+    #         print("game:{}".format(i))
+    #         rollout = 0
 
-            while True:
-                a1 = ts.action_human(ob, ep)
-                ob = np.fliplr(ob)
-                a2 = ts.action_ts(ob)
-                if rollout == 0:
-                    action = 6*a1+a2
-                    ob, r, done, info = test_env.step(action)
-                elif rollout < 0:
-                    print("right: serve ball")
-                    if a1 == 1 or a1 == 4 or a1 == 5:
-                        action = 6 * a1 + a2
-                    else:
-                        action = 6 * 1 + a2
-                    ob, r, done, info = test_env.step(action)
-                elif rollout > 0:
-                    print("left: serve ball")
-                    action = 6*a1 + 1
-                    ob, r, done, info = test_env.step(action)
+    #         while True:
+    #             a1 = ts.action_human(ob, ep)
+    #             ob = np.fliplr(ob)
+    #             a2 = ts.action_ts(ob)
+    #             if rollout == 0:
+    #                 action = 6*a1+a2
+    #                 ob, r, done, info = test_env.step(action)
+    #             elif rollout < 0:
+    #                 print("right: serve ball")
+    #                 if a1 == 1 or a1 == 4 or a1 == 5:
+    #                     action = 6 * a1 + a2
+    #                 else: 
+    #                     action = 6 * 1 + a2
+    #                 ob, r, done, info = test_env.step(action)
+    #             elif rollout > 0:
+    #                 if a2 == 1 or a2 == 4 or a2 == 5:
+    #                     action = 6 * a1 + a2
+    #                 else:
+    #                     action = 6*a1 + 1
+    #                 print("left: serve ball")
+    #                 ob, r, done, info = test_env.step(action)
 
-                if r[0] != 0:
-                    print("reward {}".format(r))
-                ts.updateBelief(r[1], done)
-                test_env.render()
+    #             if r[0] != 0:
+    #                 print("reward {}".format(r))
+    #             ts.updateBelief(r[1], done)
+    #             test_env.render()
 
-                if done:
-                    break
-                if r[0] > 0:
-                    rollout = -6
-                elif r[1] > 0:
-                    rollout = 6
-                else:
-                    rollout -= np.sign(rollout)
+    #             if done:
+    #                 break
+    #             if r[0] > 0:
+    #                 rollout = -6
+    #             elif r[1] > 0:
+    #                 rollout = 6
+    #             else:
+    #                 rollout -= np.sign(rollout)
 
-                if done:
-                    test_env.reset()
-                    break
-                time.sleep(0.1)
-                test_env.render()
+    #             if done:
+    #                 test_env.reset()
+    #                 break
+    #             time.sleep(0.1)
+    #             test_env.render()
     
-    ep = 0.3
-    for j in range(1):
-        for i in range(10):
-            ob = test_env.reset()
-            print("game:{}".format(i))
-            rollout = 0
-
-            while True:
-                a1 = ts.action_human(ob, ep)
-                ob = np.fliplr(ob)
-                a2 = ts.action_ts(ob)
-                if rollout == 0:
-                    action = 6*a1+a2
-                    ob, r, done, info = test_env.step(action)
-                elif rollout < 0:
-                    print("right: serve ball")
-                    if a1 == 1 or a1 == 4 or a1 == 5:
-                        action = 6 * a1 + a2
-                    else:
-                        action = 6 * 1 + a2
-                    ob, r, done, info = test_env.step(action)
-                elif rollout > 0:
-                    print("left: serve ball")
-                    if a2 == 1 or a2 == 4 or a2 == 5:
-                        action = 6 * a1 + a2
-                    else:
-                        action = 6*a1 + 1
-                    ob, r, done, info = test_env.step(action)
-
-                if r[0] != 0:
-                    print("reward {}".format(r))
-                ts.updateBelief(r[1], done)
-                test_env.render()
-
-                if done:
-                    break
-                if r[0] > 0:
-                    rollout = -6
-                elif r[1] > 0:
-                    rollout = 6
-                else:
-                    rollout -= np.sign(rollout)
-
-                if done:
-                    test_env.reset()
-                    break
-                time.sleep(0.1)
-                test_env.render()
-    test_env.close()
+ 
+    # test_env.close()
 
     
 
-    # kb = HumanAgent()
-    # kb.main()
+    kb = HumanAgent()
+    kb.main()
