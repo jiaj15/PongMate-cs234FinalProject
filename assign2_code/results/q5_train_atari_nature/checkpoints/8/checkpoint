@@ -1,6 +1,6 @@
 model_checkpoint_path: "."
-all_model_checkpoint_paths: "../2"
-all_model_checkpoint_paths: "../5"
 all_model_checkpoint_paths: "../6"
+all_model_checkpoint_paths: "../8"
+all_model_checkpoint_paths: "../7"
 all_model_checkpoint_paths: "../../model.weights"
 all_model_checkpoint_paths: "."
