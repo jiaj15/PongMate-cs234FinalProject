@@ -236,7 +236,7 @@ class HumanAgent(object):
         test_env = PongDiscretizer(env, players=2)
         #test_env = retroActionWrapper(env, agent_num=2)
         #print(test_env.action_space.n)
-        #test_env = retroTwoWrapper(test_env)
+        test_env = retroTwoWrapper(test_env)
         #test_env = MaxAndSkipEnv(test_env, skip=config.skip_frame, agent_num=2)
         test_env = PreproWrapper(test_env, prepro=greyscale, shape=(80, 80, 1),
                                  overwrite_render=config.overwrite_render)
