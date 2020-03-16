@@ -49,7 +49,7 @@ class Discretizer(gym.ActionWrapper):
                 for button in button_two:
                     arr[6*i + buttons[i].index(button)] = True
             self._decode_discrete_action.append(arr.copy())
-            print((combo, arr, len(self._decode_discrete_action)))
+            #print((combo, arr, len(self._decode_discrete_action)))
         # arr = np.array([False] * env.action_space.n)
         # arr[14] = True
         # self._decode_discrete_action.append(arr.copy())
@@ -289,6 +289,7 @@ class HumanAgent(object):
 
     def main(self):
         ob = self.env.reset()
+
         self._frame_buffer.append(ob)
         wrapped_ob = np.concatenate(self._frame_buffer, 2)  
         total_reward = 0
@@ -343,6 +344,28 @@ class HumanAgent(object):
             time.sleep(0.1)
             i += 1
 
+    def main_default(self):
+        self.env.close()
+   
+        env = retro.make(game='Pong-Atari2600', use_restricted_actions=retro.Actions.DISCRETE)     
+        env = retroActionWrapper(env)
+        env = retroWrapper(env)
+        env.render()
+        env.unwrapped.viewer.window.on_key_press = self.key_press
+        env.unwrapped.viewer.window.on_key_release = self.key_release
+        ob = env.reset()
+        total_reward = 0
+        while True:
+            ob, r, done, info = env.step(self.human_agent_action)
+            if r != 0:
+                print("reward %0.3f" % r)
+            total_reward += r
+            env.render()
+            if done: break
+            while self.human_sets_pause:
+                env.render()
+                time.sleep(0.1)
+            time.sleep(0.1)
 
 # def make_config_env():
 #     config_env = retro.make(game='Pong-Atari2600', use_restricted_actions=retro.Actions.DISCRETE)
@@ -467,4 +490,4 @@ if __name__ == "__main__":
     
 
     kb = HumanAgent()
-    kb.main()
+    kb.main_default()
